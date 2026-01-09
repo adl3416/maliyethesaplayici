@@ -27,10 +27,12 @@ const translations = {
     termsTitle: "Kullanım Koşulları",
     terms: "Bu uygulama yatırım tavsiyesi vermez. Kullanıcılar kendi sorumluluğunda kullanır. Yapılan hesaplamalar tahmin amaçlıdır.",
     aboutTitle: "Hakkında",
-    about: "Borsa Maliyet Hesaplayıcı v1.0 • Hisse senedi ortalaması hesaplayan açık kaynaklı araç."
+    about: "Borsa Maliyet Hesaplayıcı v1.0 • Hisse senedi ortalaması hesaplayan açık kaynaklı araç.",
+    footerText: "Borsa Maliyet Hesaplayıcı • v1.0.2025"
   },
   en: {
     navTitle: "Stock Cost Calculator",
+    footerText: "Stock Cost Calculator • v1.0.2025",
     heroTitles: [
       { t1: "Manage Your", t2: "Investments Wisely" },
       { t1: "Turn Your", t2: "Losses into Gains" },
@@ -81,6 +83,7 @@ const translations = {
   },
   ru: {
     navTitle: "Калькулятор Стоимости Акций",
+    footerText: "Калькулятор Стоимости • v1.0.2025",
     heroTitles: [
       { t1: "Управляйте Своими", t2: "Инвестициями Мудро" },
       { t1: "Превратите Свои", t2: "Убытки в Прибыль" },
@@ -106,6 +109,7 @@ const translations = {
   },
   it: {
     navTitle: "Calcolatore Costo Azioni",
+    footerText: "Calcolatore Costo Azioni • v1.0.2025",
     heroTitles: [
       { t1: "Gestisci I Tuoi", t2: "Investimenti Saggiamente" },
       { t1: "Trasforma Le Tue", t2: "Perdite in Guadagni" },
@@ -131,6 +135,7 @@ const translations = {
   },
   fr: {
     navTitle: "Calculateur de Coût d'Actions",
+    footerText: "Calculateur de Coût • v1.0.2025",
     heroTitles: [
       { t1: "Gérez Vos", t2: "Investissements Sagement" },
       { t1: "Transformez Vos", t2: "Pertes en Gains" },
@@ -181,6 +186,7 @@ const translations = {
   },
   pt: {
     navTitle: "Calculadora de Custo de Ações",
+    footerText: "Calculadora de Custo • v1.0.2025",
     heroTitles: [
       { t1: "Gerencie Seus", t2: "Investimentos Sabiamente" },
       { t1: "Transforme Suas", t2: "Perdas em Ganhos" },
@@ -299,10 +305,16 @@ export default function App() {
   const [showLegalMenu, setShowLegalMenu] = useState(false);
   const [legalType, setLegalType] = useState('privacy');
   const [refreshing, setRefreshing] = useState(false);
+  const [appReady, setAppReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [deviceLangCode, setDeviceLangCode] = useState('en');
 
   const titleRotationRef = useRef(null);
   useEffect(() => {
-    loadSettings();
+    const initializeApp = async () => {
+      await loadSettings();
+    };
+    initializeApp();
   }, []);
 
   // Title rotation
@@ -319,33 +331,31 @@ export default function App() {
 
   const loadSettings = async () => {
     try {
-      const savedLang = await AsyncStorage.getItem('language');
-      const savedTheme = await AsyncStorage.getItem('theme');
-      const savedCurrency = await AsyncStorage.getItem('currency');
-
-      // Eğer kayıtlı dil yoksa cihaz dilini kontrol et
-      let langToSet = savedLang;
+      // Her açılışta device language'i kontrol et
+      const locales = await Localization.getLocalesAsync();
+      const deviceLangCode = locales?.[0]?.languageCode || 'en';
       
-      if (!savedLang) {
-        // Cihazın dilini al
-        const deviceLocales = await Localization.getLocalesAsync();
-        const deviceLangCode = deviceLocales && deviceLocales.length > 0 
-          ? deviceLocales[0].languageCode 
-          : Localization.getLocales()[0]?.languageCode || 'en';
-        
-        const supportedLangs = Object.keys(translations);
-        
-        // Device dili desteklenen diller içinde var mı kontrol et
-        langToSet = supportedLangs.includes(deviceLangCode) ? deviceLangCode : 'en';
-      }
-
-      setLanguage(langToSet);
+      const supportedLangs = Object.keys(translations);
+      const detectedLang = supportedLangs.includes(deviceLangCode) ? deviceLangCode : 'en';
+      
+      setDeviceLangCode(detectedLang);
+      setLanguage(detectedLang);
+      
+      // Theme için AsyncStorage'i kontrol et
+      const savedTheme = await AsyncStorage.getItem('theme');
       if (savedTheme) setIsDark(savedTheme === 'dark');
       else setIsDark(systemColorScheme === 'dark');
-      if (savedCurrency) setCurrency(savedCurrency);
-      else setCurrency(langToCurrency[langToSet]);
+      
+      // Currency - device language'e göre otomatik ayarla
+      setCurrency(langToCurrency[detectedLang]);
     } catch (e) {
-      console.log('Error loading settings', e);
+      setLanguage('en');
+      setCurrency('USD');
+    } finally {
+      // Splash screen'i 2 saniye göster
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setShowSplash(false);
+      setAppReady(true);
     }
   };
 
@@ -419,9 +429,7 @@ export default function App() {
 
   // Recalculate whenever inputs change
   useEffect(() => {
-    if (currentQty && currentPrice && newPrice && targetPrice) {
-      calculate();
-    }
+    calculate();
   }, [currentQty, currentPrice, newPrice, targetPrice]);
 
   const t = translations[language];
@@ -433,6 +441,98 @@ export default function App() {
   const secondaryText = isDark ? '#9ca3af' : '#6b7280';
 
   const currentTitle = t.heroTitles[titleIndex];
+
+  if (showSplash) {
+    // Splash screen'deki yazıyı device language'e göre ayarla
+    const splashTexts = {
+      'tr': { name: 'Maliyet Hesaplayıcı', desc: 'Hızlı ve Doğru Hesaplamalar' },
+      'en': { name: 'Stock Cost Calculator', desc: 'Fast and Accurate Calculations' },
+      'de': { name: 'Aktienkosten-Rechner', desc: 'Schnelle und genaue Berechnungen' },
+      'ru': { name: 'Калькулятор Стоимости', desc: 'Быстрые и точные расчеты' },
+      'it': { name: 'Calcolatore Costo Azioni', desc: 'Calcoli Veloci e Precisi' },
+      'fr': { name: 'Calculateur de Coût', desc: 'Calculs Rapides et Précis' },
+      'es': { name: 'Calculadora de Costo', desc: 'Cálculos Rápidos y Precisos' },
+      'pt': { name: 'Calculadora de Custo', desc: 'Cálculos Rápidos e Precisos' },
+      'ja': { name: '株式コスト計算機', desc: '高速で正確な計算' },
+      'zh': { name: '股票成本计算器', desc: '快速准确的计算' }
+    };
+    
+    const splashText = splashTexts[deviceLangCode] || splashTexts['en'];
+    const names = splashText.name.split(' ');
+    
+    return (
+      <View style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
+        {/* Advanced Calculator Logo */}
+        <View style={{ 
+          width: 100, 
+          height: 100, 
+          backgroundColor: '#3b82f6', 
+          borderRadius: 20,
+          justifyContent: 'flex-start',
+          padding: 12,
+          marginBottom: 30,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 6
+        }}>
+          {/* Display Screen */}
+          <View style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderRadius: 8,
+            height: 24,
+            width: '100%',
+            marginBottom: 10,
+            paddingRight: 4,
+            justifyContent: 'flex-end',
+            paddingBottom: 2
+          }}>
+            <View style={{ 
+              width: '70%', 
+              height: 4, 
+              backgroundColor: 'rgba(255, 255, 255, 0.4)',
+              borderRadius: 2
+            }} />
+          </View>
+          
+          {/* Button Grid - 3x2 */}
+          <View style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+            </View>
+            
+            <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+            </View>
+          </View>
+        </View>
+        
+        <Text style={{ fontSize: 32, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+          <Text style={{ color: '#475569' }}>{names[0]} </Text>
+          <Text style={{ color: '#3b82f6' }}>{names.slice(1).join(' ')}</Text>
+        </Text>
+        
+        <Text style={{ color: '#64748b', fontSize: 14, marginBottom: 40 }}>
+          {splashText.desc}
+        </Text>
+        
+        <View style={{ 
+          width: 48, 
+          height: 48, 
+          borderRadius: 24, 
+          borderWidth: 3, 
+          borderColor: '#3b82f6', 
+          borderTopColor: '#06b6d4',
+          borderRightColor: '#06b6d4'
+        }} />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -471,7 +571,16 @@ export default function App() {
           marginBottom: 12
         }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor, flex: 1 }}>
-            Maliyet <Text style={{ color: '#3b82f6' }}>Hesaplayıcı</Text>
+            {language === 'tr' && <><Text>Maliyet </Text><Text style={{ color: '#3b82f6' }}>Hesaplayıcı</Text></>}
+            {language === 'en' && <><Text>Stock </Text><Text style={{ color: '#3b82f6' }}>Cost Calculator</Text></>}
+            {language === 'de' && <><Text>Aktienkosten</Text><Text style={{ color: '#3b82f6' }}>-Rechner</Text></>}
+            {language === 'ru' && <><Text>Калькулятор </Text><Text style={{ color: '#3b82f6' }}>Стоимости</Text></>}
+            {language === 'it' && <><Text>Calcolatore </Text><Text style={{ color: '#3b82f6' }}>Costo Azioni</Text></>}
+            {language === 'fr' && <><Text>Calculateur </Text><Text style={{ color: '#3b82f6' }}>de Coût</Text></>}
+            {language === 'es' && <><Text>Calculadora </Text><Text style={{ color: '#3b82f6' }}>de Costo</Text></>}
+            {language === 'pt' && <><Text>Calculadora </Text><Text style={{ color: '#3b82f6' }}>de Custo</Text></>}
+            {language === 'ja' && <><Text>株式</Text><Text style={{ color: '#3b82f6' }}>コスト計算機</Text></>}
+            {language === 'zh' && <><Text>股票</Text><Text style={{ color: '#3b82f6' }}>成本计算器</Text></>}
           </Text>
           
           <Switch 
@@ -789,37 +898,48 @@ export default function App() {
 
           {/* Result */}
           {result && !error && (
-            <View style={{ 
-              backgroundColor: '#3b82f6', 
-              borderRadius: 16, 
-              padding: 16, 
-              marginTop: 16
-            }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
-                <View>
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
-                    {t.resultTitle}
+            <View
+              style={{ 
+                borderRadius: 16, 
+                marginTop: 16, 
+                marginHorizontal: 16,
+                marginBottom: 20,
+                backgroundColor: '#3b82f6',
+                overflow: 'hidden',
+                shadowColor: '#1e3a8a',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.4,
+                shadowRadius: 12,
+                elevation: 8
+              }}
+            >
+              <View style={{ padding: 16 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+                  <View>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
+                      {t.resultTitle}
+                    </Text>
+                    <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
+                      {result.qty}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 11, color: '#bfdbfe', textTransform: 'uppercase' }}>
+                      {t.totalCost}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>
+                      {currencySymbols[currency]}{result.cost.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.2)', paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 13, color: '#bfdbfe' }}>
+                    {t.newTotalQty}
                   </Text>
-                  <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
-                    {result.qty}
+                  <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
+                    {result.newTotal}
                   </Text>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 11, color: '#bfdbfe', textTransform: 'uppercase' }}>
-                    {t.totalCost}
-                  </Text>
-                  <Text style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>
-                    {currencySymbols[currency]}{result.cost.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.2)', paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 13, color: '#bfdbfe' }}>
-                  {t.newTotalQty}
-                </Text>
-                <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
-                  {result.newTotal}
-                </Text>
               </View>
             </View>
           )}
@@ -872,7 +992,7 @@ export default function App() {
           </TouchableOpacity>
         </View>
         <Text style={{ fontSize: 11, color: secondaryText, textAlign: 'center' }}>
-          Borsa Maliyet Hesaplayıcı • v1.0 • 2025
+          {t.footerText || `${t.navTitle} • v1.0.2025`}
         </Text>
       </View>
     </View>
