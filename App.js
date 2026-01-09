@@ -1,475 +1,930 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, FlatList, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, ScrollView, TextInput, TouchableOpacity, Text, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 
 const translations = {
-  tr: { title: 'Maliyet Hesaplayıcı', heroTitle: 'Zararınızı Kara Dönüştürün', heroDesc: 'Borsa veya kripto piyasalarında maliyetinizi düşürmek için almanız gereken tam miktarı saniyeler içinde hesaplayın.', currentQty: 'Mevcut Adet', currentAvg: 'Mevcut Ort.', newPrice: 'Yeni Fiyat', targetAvg: 'Hedef Ort.', calculate: 'Hesapla', result: 'Sonuç', totalCost: 'Toplam Maliyet', totalQty: 'Toplam Adet', qtyToBuy: 'Alınacak Adet', newTotal: 'Yeni Toplam', newAvg: 'Yeni Ortalama', theme: 'Tema', language: 'Dil', calculator: 'Hesaplayıcı', buyingQty: 'Alınması Gereken', targetAvg2: 'Tahmini Maliyet' },
-  en: { title: 'Cost Calculator', heroTitle: 'Turn Your Loss Into Profit', heroDesc: 'Calculate the exact amount you need to buy on the stock or crypto markets to reduce your cost in seconds.', currentQty: 'Current Qty', currentAvg: 'Current Avg', newPrice: 'New Price', targetAvg: 'Target Avg', calculate: 'Calculate', result: 'Result', totalCost: 'Total Cost', totalQty: 'Total Qty', qtyToBuy: 'Qty to Buy', newTotal: 'New Total', newAvg: 'New Average', theme: 'Theme', language: 'Language', calculator: 'Calculator', buyingQty: 'Buy Qty Needed', targetAvg2: 'Estimated Cost' },
-  ar: { title: 'حاسبة التكلفة', heroTitle: 'حول خسارتك إلى ربح', heroDesc: 'احسب المبلغ الدقيق الذي تحتاجه في أسواق الأسهم أو العملات المشفرة لتقليل تكاليفك في ثوانٍ', currentQty: 'الكمية الحالية', currentAvg: 'المتوسط الحالي', newPrice: 'السعر الجديد', targetAvg: 'المتوسط المستهدف', calculate: 'احسب', result: 'النتيجة', totalCost: 'إجمالي التكلفة', totalQty: 'إجمالي الكمية', qtyToBuy: 'الكمية للشراء', newTotal: 'الإجمالي الجديد', newAvg: 'المتوسط الجديد', theme: 'المظهر', language: 'اللغة', calculator: 'الحاسبة', buyingQty: 'الكمية المراد شراؤها', targetAvg2: 'التكلفة المتوقعة' },
-  de: { title: 'Kostenrechner', heroTitle: 'Verwandeln Sie Ihren Verlust in Gewinn', heroDesc: 'Berechnen Sie in Sekundenschnelle den genauen Betrag, den Sie an den Aktien- oder Kryptomärkten kaufen müssen, um Ihre Kosten zu senken.', currentQty: 'Aktuelle Menge', currentAvg: 'Aktueller Durchschnitt', newPrice: 'Neuer Preis', targetAvg: 'Zieldurchschnitt', calculate: 'Berechnen', result: 'Ergebnis', totalCost: 'Gesamtkosten', totalQty: 'Gesamtmenge', qtyToBuy: 'Kaufmenge', newTotal: 'Neue Summe', newAvg: 'Neuer Durchschnitt', theme: 'Design', language: 'Sprache', calculator: 'Rechner', buyingQty: 'Zu kaufende Menge', targetAvg2: 'Geschätzte Kosten' },
-  pt: { title: 'Calculadora de Custos', heroTitle: 'Transforme Sua Perda em Lucro', heroDesc: 'Calcule o valor exato que você precisa comprar nos mercados de ações ou criptomoedas para reduzir seu custo em segundos.', currentQty: 'Qtd Atual', currentAvg: 'Média Atual', newPrice: 'Novo Preço', targetAvg: 'Média Alvo', calculate: 'Calcular', result: 'Resultado', totalCost: 'Custo Total', totalQty: 'Qtd Total', qtyToBuy: 'Qtd Comprar', newTotal: 'Novo Total', newAvg: 'Nova Média', theme: 'Tema', language: 'Idioma', calculator: 'Calculadora', buyingQty: 'Qtd a Comprar', targetAvg2: 'Custo Estimado' },
-  zh: { title: '成本计算器', heroTitle: '将您的亏损转变为利润', heroDesc: '在股票或加密市场中计算您需要购买的确切金额以在几秒内降低成本', currentQty: '当前数量', currentAvg: '当前平均', newPrice: '新价格', targetAvg: '目标平均', calculate: '计算', result: '结果', totalCost: '总成本', totalQty: '总数量', qtyToBuy: '购买数量', newTotal: '新总额', newAvg: '新平均', theme: '主题', language: '语言', calculator: '计算器', buyingQty: '需购买数量', targetAvg2: '估计成本' },
-  fr: { title: 'Calculatrice de Coût', heroTitle: 'Transformez Votre Perte en Profit', heroDesc: 'Calculez le montant exact que vous devez acheter sur les marchés boursiers ou de cryptomonnaies pour réduire votre coût en quelques secondes.', currentQty: 'Qté Actuelle', currentAvg: 'Moyenne Actuelle', newPrice: 'Nouveau Prix', targetAvg: 'Moyenne Cible', calculate: 'Calculer', result: 'Résultat', totalCost: 'Coût Total', totalQty: 'Qté Totale', qtyToBuy: 'Qté à Acheter', newTotal: 'Nouveau Total', newAvg: 'Nouvelle Moyenne', theme: 'Thème', language: 'Langue', calculator: 'Calculatrice', buyingQty: 'Qté à Acheter', targetAvg2: 'Coût Estimé' },
-  it: { title: 'Calcolatore di Costi', heroTitle: 'Trasforma la Tua Perdita in Profitto', heroDesc: 'Calcola l\'importo esatto che devi acquistare sui mercati azionari o criptovalute per ridurre il costo in pochi secondi.', currentQty: 'Quantità Attuale', currentAvg: 'Media Attuale', newPrice: 'Nuovo Prezzo', targetAvg: 'Media Obiettivo', calculate: 'Calcola', result: 'Risultato', totalCost: 'Costo Totale', totalQty: 'Quantità Totale', qtyToBuy: 'Quantità da Acquistare', newTotal: 'Nuovo Totale', newAvg: 'Nuova Media', theme: 'Tema', language: 'Lingua', calculator: 'Calcolatore', buyingQty: 'Quantità da Acquistare', targetAvg2: 'Costo Stimato' },
+  tr: {
+    navTitle: "Borsa Maliyet Hesaplayıcı",
+    heroTitles: [
+      { t1: "Yatırımlarınızı", t2: "Akıllıca Yönetin" },
+      { t1: "Zararınızı", t2: "Kara Dönüştürün" },
+      { t1: "Ortalama Maliyeti", t2: "Optimize Edin" }
+    ],
+    heroDesc: "Hedef ortalama fiyata ulaşmak için kaç birim satın almanız gerektiğini saniyeler içinde doğru hesaplayın.",
+    calcTitle: "Hesaplayıcı",
+    labelCurrentQty: "Güncel Miktar",
+    labelCurrentPrice: "Güncel Ort. Fiyatı",
+    labelNewPrice: "Yeni Fiyat",
+    labelTargetPrice: "Hedef Ort. Fiyatı",
+    resultTitle: "Satın Alınacak Miktar",
+    totalCost: "Tahmini Maliyet",
+    newTotalQty: "Yeni Toplam:",
+    errorRange: "Hedef fiyat, güncel fiyat ile yeni fiyat arasında olmalıdır.",
+    errorEqual: "Hedef fiyat yeni fiyata eşit olamaz.",
+    privacyTitle: "Gizlilik Politikası",
+    privacy: "Kişisel verileriniz güvenle saklanır. Bu uygulama çevrimdışıda çalışır ve sunuculara veri göndermez. Tüm hesaplamalar cihazınızda yapılır.",
+    termsTitle: "Kullanım Koşulları",
+    terms: "Bu uygulama yatırım tavsiyesi vermez. Kullanıcılar kendi sorumluluğunda kullanır. Yapılan hesaplamalar tahmin amaçlıdır.",
+    aboutTitle: "Hakkında",
+    about: "Borsa Maliyet Hesaplayıcı v1.0 • Hisse senedi ortalaması hesaplayan açık kaynaklı araç."
+  },
+  en: {
+    navTitle: "Stock Cost Calculator",
+    heroTitles: [
+      { t1: "Manage Your", t2: "Investments Wisely" },
+      { t1: "Turn Your", t2: "Losses into Gains" },
+      { t1: "Optimize Your", t2: "Average Cost" }
+    ],
+    heroDesc: "Accurately calculate how many units you need to buy to reach your target average price in seconds.",
+    calcTitle: "Calculator",
+    labelCurrentQty: "Current Quantity",
+    labelCurrentPrice: "Current Avg. Price",
+    labelNewPrice: "New Price",
+    labelTargetPrice: "Target Avg. Price",
+    resultTitle: "Quantity to Buy",
+    totalCost: "Estimated Cost",
+    newTotalQty: "New Total:",
+    errorRange: "Target price must be between current price and new price.",
+    errorEqual: "Target price cannot be equal to new price.",
+    privacyTitle: "Privacy Policy",
+    privacy: "Your personal data is kept secure. This app works offline and does not send data to servers. All calculations are done on your device.",
+    termsTitle: "Terms of Use",
+    terms: "This app does not provide investment advice. Users use it at their own responsibility. Calculations are estimates only.",
+    aboutTitle: "About",
+    about: "Stock Cost Calculator v1.0 • Open source tool for calculating stock averaging."
+  },
+  de: {
+    navTitle: "Aktienkosten-Rechner",
+    heroTitles: [
+      { t1: "Verwalten Sie Ihre", t2: "Investitionen Weise" },
+      { t1: "Verwandeln Sie Ihre", t2: "Verluste in Gewinne" },
+      { t1: "Optimieren Sie Ihre", t2: "Durchschnittskosten" }
+    ],
+    heroDesc: "Berechnen Sie in Sekunden genau, wie viele Einheiten Sie kaufen müssen, um Ihren Zieldurchschnittspreis zu erreichen.",
+    calcTitle: "Rechner",
+    labelCurrentQty: "Aktuelle Menge",
+    labelCurrentPrice: "Aktueller Durchschnittspreis",
+    labelNewPrice: "Neuer Preis",
+    labelTargetPrice: "Ziel-Durchschnittspreis",
+    resultTitle: "Zu kaufende Menge",
+    totalCost: "Geschätzte Kosten",
+    newTotalQty: "Neuer Gesamtbetrag:",
+    errorRange: "Der Zielpreis muss zwischen dem aktuellen Preis und dem neuen Preis liegen.",
+    errorEqual: "Der Zielpreis kann nicht gleich dem neuen Preis sein.",
+    privacyTitle: "Datenschutzrichtlinie",
+    privacy: "Ihre persönlichen Daten werden sicher gespeichert. Diese App funktioniert offline und sendet keine Daten an Server. Alle Berechnungen erfolgen auf Ihrem Gerät.",
+    termsTitle: "Nutzungsbedingungen",
+    terms: "Diese App bietet keine Anlageberatung. Benutzer verwenden sie auf eigenes Risiko. Berechnungen sind nur Schätzungen.",
+    aboutTitle: "Über",
+    about: "Aktienkosten-Rechner v1.0 • Open-Source-Tool zur Berechnung von Aktienoptimierungen."
+  },
+  ru: {
+    navTitle: "Калькулятор Стоимости Акций",
+    heroTitles: [
+      { t1: "Управляйте Своими", t2: "Инвестициями Мудро" },
+      { t1: "Превратите Свои", t2: "Убытки в Прибыль" },
+      { t1: "Оптимизируйте Вашу", t2: "Среднюю Стоимость" }
+    ],
+    heroDesc: "Точно рассчитайте, сколько единиц вам нужно купить, чтобы достичь целевой средней цены за считанные секунды.",
+    calcTitle: "Калькулятор",
+    labelCurrentQty: "Текущее Количество",
+    labelCurrentPrice: "Текущая Средняя Цена",
+    labelNewPrice: "Новая Цена",
+    labelTargetPrice: "Целевая Средняя Цена",
+    resultTitle: "Количество к Покупке",
+    totalCost: "Предполагаемая Стоимость",
+    newTotalQty: "Новый Итог:",
+    errorRange: "Целевая цена должна быть между текущей ценой и новой ценой.",
+    errorEqual: "Целевая цена не может быть равна новой цене.",
+    privacyTitle: "Политика конфиденциальности",
+    privacy: "Ваши личные данные надежно защищены. Это приложение работает в автономном режиме и не отправляет данные на серверы. Все расчеты выполняются на вашем устройстве.",
+    termsTitle: "Условия использования",
+    terms: "Это приложение не предоставляет инвестиционные советы. Пользователи используют его на свой риск. Расчеты только приблизительные.",
+    aboutTitle: "О приложении",
+    about: "Калькулятор Стоимости Акций v1.0 • Инструмент с открытым исходным кодом для расчета средней стоимости."
+  },
+  it: {
+    navTitle: "Calcolatore Costo Azioni",
+    heroTitles: [
+      { t1: "Gestisci I Tuoi", t2: "Investimenti Saggiamente" },
+      { t1: "Trasforma Le Tue", t2: "Perdite in Guadagni" },
+      { t1: "Ottimizza Il Tuo", t2: "Costo Medio" }
+    ],
+    heroDesc: "Calcola accuratamente quante unità hai bisogno di acquistare per raggiungere il tuo prezzo medio target in secondi.",
+    calcTitle: "Calcolatore",
+    labelCurrentQty: "Quantità Attuale",
+    labelCurrentPrice: "Prezzo Medio Attuale",
+    labelNewPrice: "Nuovo Prezzo",
+    labelTargetPrice: "Prezzo Medio Target",
+    resultTitle: "Quantità da Acquistare",
+    totalCost: "Costo Stimato",
+    newTotalQty: "Nuovo Totale:",
+    errorRange: "Il prezzo target deve essere tra il prezzo attuale e il nuovo prezzo.",
+    errorEqual: "Il prezzo target non può essere uguale al nuovo prezzo.",
+    privacyTitle: "Politica sulla Privacy",
+    privacy: "I tuoi dati personali sono archiviati in modo sicuro. Questa app funziona offline e non invia dati ai server. Tutti i calcoli vengono eseguiti sul tuo dispositivo.",
+    termsTitle: "Condizioni d'Uso",
+    terms: "Questa app non fornisce consulenza sugli investimenti. Gli utenti la utilizzano a proprio rischio. I calcoli sono solo stime.",
+    aboutTitle: "Chi Siamo",
+    about: "Calcolatore Costo Azioni v1.0 • Strumento open source per il calcolo della media dei costi azionari."
+  },
+  fr: {
+    navTitle: "Calculateur de Coût d'Actions",
+    heroTitles: [
+      { t1: "Gérez Vos", t2: "Investissements Sagement" },
+      { t1: "Transformez Vos", t2: "Pertes en Gains" },
+      { t1: "Optimisez Votre", t2: "Coût Moyen" }
+    ],
+    heroDesc: "Calculez avec précision le nombre d'unités que vous devez acheter pour atteindre votre prix moyen cible en quelques secondes.",
+    calcTitle: "Calculatrice",
+    labelCurrentQty: "Quantité Actuelle",
+    labelCurrentPrice: "Prix Moyen Actuel",
+    labelNewPrice: "Nouveau Prix",
+    labelTargetPrice: "Prix Moyen Cible",
+    resultTitle: "Quantité à Acheter",
+    totalCost: "Coût Estimé",
+    newTotalQty: "Nouveau Total:",
+    errorRange: "Le prix cible doit être entre le prix actuel et le nouveau prix.",
+    errorEqual: "Le prix cible ne peut pas être égal au nouveau prix.",
+    privacyTitle: "Politique de Confidentialité",
+    privacy: "Vos données personnelles sont stockées en toute sécurité. Cette application fonctionne hors ligne et n'envoie pas de données aux serveurs. Tous les calculs sont effectués sur votre appareil.",
+    termsTitle: "Conditions d'Utilisation",
+    terms: "Cette application ne fournit pas de conseils d'investissement. Les utilisateurs l'utilisent à leurs propres risques. Les calculs sont à titre indicatif uniquement.",
+    aboutTitle: "À Propos",
+    about: "Calculateur de Coût d'Actions v1.0 • Outil open source pour calculer la moyenne des coûts d'actions."
+  },
+  es: {
+    navTitle: "Calculadora de Costo de Acciones",
+    heroTitles: [
+      { t1: "Gestiona Tus", t2: "Inversiones Sabiamente" },
+      { t1: "Convierte Tus", t2: "Pérdidas en Ganancias" },
+      { t1: "Optimiza Tu", t2: "Costo Promedio" }
+    ],
+    heroDesc: "Calcula con precisión cuántas unidades necesitas comprar para alcanzar tu precio promedio objetivo en segundos.",
+    calcTitle: "Calculadora",
+    labelCurrentQty: "Cantidad Actual",
+    labelCurrentPrice: "Precio Promedio Actual",
+    labelNewPrice: "Nuevo Precio",
+    labelTargetPrice: "Precio Promedio Objetivo",
+    resultTitle: "Cantidad a Comprar",
+    totalCost: "Costo Estimado",
+    newTotalQty: "Nuevo Total:",
+    errorRange: "El precio objetivo debe estar entre el precio actual y el nuevo precio.",
+    errorEqual: "El precio objetivo no puede ser igual al nuevo precio.",
+    privacyTitle: "Política de Privacidad",
+    privacy: "Tus datos personales se almacenan de forma segura. Esta aplicación funciona sin conexión y no envía datos a servidores. Todos los cálculos se realizan en tu dispositivo.",
+    termsTitle: "Términos de Uso",
+    terms: "Esta aplicación no proporciona asesoramiento de inversión. Los usuarios la usan bajo su propio riesgo. Los cálculos son solo estimaciones.",
+    aboutTitle: "Acerca de",
+    about: "Calculadora de Costo de Acciones v1.0 • Herramienta de código abierto para calcular el promedio de costos de acciones."
+  },
+  pt: {
+    navTitle: "Calculadora de Custo de Ações",
+    heroTitles: [
+      { t1: "Gerencie Seus", t2: "Investimentos Sabiamente" },
+      { t1: "Transforme Suas", t2: "Perdas em Ganhos" },
+      { t1: "Otimize Seu", t2: "Custo Médio" }
+    ],
+    heroDesc: "Calcule com precisão quantas unidades você precisa comprar para atingir seu preço médio alvo em segundos.",
+    calcTitle: "Calculadora",
+    labelCurrentQty: "Quantidade Atual",
+    labelCurrentPrice: "Preço Médio Atual",
+    labelNewPrice: "Novo Preço",
+    labelTargetPrice: "Preço Médio Alvo",
+    resultTitle: "A Comprar",
+    totalCost: "Custo Estimado",
+    newTotalQty: "Novo Total:",
+    errorRange: "O preço alvo deve estar entre o preço atual e o novo preço.",
+    errorEqual: "O preço alvo não pode ser igual ao novo preço.",
+    privacyTitle: "Política de Privacidade",
+    privacy: "Seus dados pessoais são armazenados com segurança. Este aplicativo funciona offline e não envia dados para servidores. Todos os cálculos são feitos no seu dispositivo.",
+    termsTitle: "Termos de Uso",
+    terms: "Este aplicativo não fornece conselhos de investimento. Os usuários o usam por conta e risco próprio. Os cálculos são apenas estimativas.",
+    aboutTitle: "Sobre",
+    about: "Calculadora de Custo de Ações v1.0 • Ferramenta de código aberto para calcular a média de custos de ações."
+  },
+  ja: {
+    navTitle: "株式コスト計算機",
+    heroTitles: [
+      { t1: "投資を", t2: "賢く管理" },
+      { t1: "損失を", t2: "利益に変換" },
+      { t1: "平均コストを", t2: "最適化" }
+    ],
+    heroDesc: "目標平均価格に到達するために必要な購入数量を数秒で正確に計算します。",
+    calcTitle: "計算機",
+    labelCurrentQty: "現在の数量",
+    labelCurrentPrice: "現在の平均価格",
+    labelNewPrice: "新しい価格",
+    labelTargetPrice: "目標平均価格",
+    resultTitle: "購入必要数",
+    totalCost: "推定コスト",
+    newTotalQty: "新合計:",
+    errorRange: "目標価格は現在の価格と新しい価格の間である必要があります。",
+    errorEqual: "目標価格は新しい価格と等しくできません。",
+    privacyTitle: "プライバシーポリシー",
+    privacy: "個人情報は安全に保存されます。このアプリはオフラインで動作し、データをサーバーに送信しません。すべての計算はデバイス上で行われます。",
+    termsTitle: "利用規約",
+    terms: "このアプリは投資アドバイスを提供しません。ユーザーは自己の責任において使用します。計算は推定値のみです。",
+    aboutTitle: "について",
+    about: "株式コスト計算機 v1.0 • 株式平均計算用のオープンソースツール。"
+  },
+  zh: {
+    navTitle: "股票成本计算器",
+    heroTitles: [
+      { t1: "智能管理", t2: "您的投资" },
+      { t1: "将亏损", t2: "转为盈利" },
+      { t1: "优化您的", t2: "平均成本" }
+    ],
+    heroDesc: "在几秒钟内准确计算您需要购买多少才能达到目标平均价格。",
+    calcTitle: "计算器",
+    labelCurrentQty: "当前数量",
+    labelCurrentPrice: "当前均价",
+    labelNewPrice: "新价格",
+    labelTargetPrice: "目标均价",
+    resultTitle: "需要购买",
+    totalCost: "预估成本",
+    newTotalQty: "新总计:",
+    errorRange: "目标价格必须在当前价格和新价格之间。",
+    errorEqual: "目标价格不能等于新价格。",
+    privacyTitle: "隐私政策",
+    privacy: "您的个人数据安全存储。此应用离线工作，不向服务器发送数据。所有计算都在您的设备上进行。",
+    termsTitle: "使用条款",
+    terms: "本应用不提供投资建议。用户自行承担责任。计算仅供参考。",
+    aboutTitle: "关于",
+    about: "股票成本计算器 v1.0 • 用于计算股票平均成本的开源工具。"
+  }
 };
 
-const themes = [
-  { name: 'Dark', bg: '#1a1a1a', card: '#2d2d2d', border: '#3d3d3d', text: '#ffffff', textSecond: '#b0b0b0', primary: '#3b82f6', accent: '#10b981', gradientStart: '#1e40af', gradientEnd: '#3b82f6' },
-  { name: 'Light', bg: '#ffffff', card: '#f5f5f5', border: '#e0e0e0', text: '#000000', textSecond: '#666666', primary: '#2563eb', accent: '#10b981', gradientStart: '#1e40af', gradientEnd: '#3b82f6' },
-];
+const currencySymbols = {
+  'TRY': '₺',
+  'USD': '$',
+  'EUR': '€',
+  'GBP': '£',
+  'RUB': '₽',
+  'JPY': '¥',
+  'CNY': '¥'
+};
+
+const langToCurrency = {
+  'tr': 'TRY',
+  'en': 'USD',
+  'de': 'EUR',
+  'ru': 'RUB',
+  'it': 'EUR',
+  'fr': 'EUR',
+  'es': 'EUR',
+  'pt': 'EUR',
+  'ja': 'JPY',
+  'zh': 'CNY'
+};
 
 export default function App() {
-  const [themeIdx, setThemeIdx] = useState(1); // Light mode as default (index 1)
-  const [lang, setLang] = useState('tr');
+  const systemColorScheme = useColorScheme();
+  const [isDark, setIsDark] = useState(systemColorScheme === 'dark');
+  const [language, setLanguage] = useState('tr');
+  const [currency, setCurrency] = useState('TRY');
+  const [titleIndex, setTitleIndex] = useState(0);
+
   const [currentQty, setCurrentQty] = useState('');
-  const [currentAvg, setCurrentAvg] = useState('');
+  const [currentPrice, setCurrentPrice] = useState('');
   const [newPrice, setNewPrice] = useState('');
-  const [targetAvg, setTargetAvg] = useState('');
+  const [targetPrice, setTargetPrice] = useState('');
+
   const [result, setResult] = useState(null);
-  const [showLangs, setShowLangs] = useState(false);
+  const [error, setError] = useState(null);
 
-  const colors = themes[themeIdx];
-  const t = translations[lang];
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
+  const [showLegalMenu, setShowLegalMenu] = useState(false);
+  const [legalType, setLegalType] = useState('privacy');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const calculate = () => {
-    if (!currentQty || !currentAvg || !newPrice || !targetAvg) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
+  const titleRotationRef = useRef(null);
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  // Title rotation
+  useEffect(() => {
+    if (titleRotationRef.current) clearInterval(titleRotationRef.current);
+    titleRotationRef.current = setInterval(() => {
+      setTitleIndex(prev => (prev + 1) % translations[language].heroTitles.length);
+    }, 3000);
+
+    return () => {
+      if (titleRotationRef.current) clearInterval(titleRotationRef.current);
+    };
+  }, [language]);
+
+  const loadSettings = async () => {
+    try {
+      const savedLang = await AsyncStorage.getItem('language');
+      const savedTheme = await AsyncStorage.getItem('theme');
+      const savedCurrency = await AsyncStorage.getItem('currency');
+
+      // Eğer kayıtlı dil yoksa cihaz dilini kontrol et
+      let langToSet = savedLang;
+      
+      if (!savedLang) {
+        // Cihazın dilini al
+        const deviceLocales = await Localization.getLocalesAsync();
+        const deviceLangCode = deviceLocales && deviceLocales.length > 0 
+          ? deviceLocales[0].languageCode 
+          : Localization.getLocales()[0]?.languageCode || 'en';
+        
+        const supportedLangs = Object.keys(translations);
+        
+        // Device dili desteklenen diller içinde var mı kontrol et
+        langToSet = supportedLangs.includes(deviceLangCode) ? deviceLangCode : 'en';
+      }
+
+      setLanguage(langToSet);
+      if (savedTheme) setIsDark(savedTheme === 'dark');
+      else setIsDark(systemColorScheme === 'dark');
+      if (savedCurrency) setCurrency(savedCurrency);
+      else setCurrency(langToCurrency[langToSet]);
+    } catch (e) {
+      console.log('Error loading settings', e);
     }
-
-    const cQty = parseFloat(currentQty);
-    const cAvg = parseFloat(currentAvg);
-    const nPrice = parseFloat(newPrice);
-    const tAvg = parseFloat(targetAvg);
-
-    if (cQty <= 0 || cAvg <= 0 || nPrice <= 0 || tAvg <= 0) {
-      Alert.alert('Error', 'All values must be positive');
-      return;
-    }
-
-    const totalCost = cQty * cAvg;
-    // Solve: (totalCost + nPrice * Q) / (cQty + Q) = tAvg
-    // totalCost + nPrice * Q = tAvg * (cQty + Q)
-    // totalCost + nPrice * Q = tAvg * cQty + tAvg * Q
-    // nPrice * Q - tAvg * Q = tAvg * cQty - totalCost
-    // Q * (nPrice - tAvg) = tAvg * cQty - totalCost
-    const qtyToBuy = (tAvg * cQty - totalCost) / (nPrice - tAvg);
-    const qtyNeeded = cQty + qtyToBuy;
-    const newTotalCost = totalCost + (nPrice * qtyToBuy);
-    const newAverage = newTotalCost / qtyNeeded;
-
-    setResult({
-      totalCost: totalCost.toFixed(2),
-      qtyNeeded: qtyNeeded.toFixed(2),
-      qtyToBuy: qtyToBuy.toFixed(2),
-      newAverage: newAverage.toFixed(2),
-      totalNew: (nPrice * qtyToBuy).toFixed(2), // Cost of new purchases only
-    });
   };
 
-  const codes = ['tr', 'en', 'ar', 'de', 'pt', 'zh', 'fr', 'it'];
-  const langNames = { tr: 'Türkçe', en: 'English', ar: 'العربية', de: 'Deutsch', pt: 'Português', zh: '中文', fr: 'Français', it: 'Italiano' };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Tüm input'ları temizle
+    setCurrentQty('');
+    setCurrentPrice('');
+    setNewPrice('');
+    setTargetPrice('');
+    setResult(null);
+    setError(null);
+    
+    // Refresh animasyonu için kısa bir gecikme
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setRefreshing(false);
+  };
+
+  const saveLanguage = async (lang) => {
+    setLanguage(lang);
+    setCurrency(langToCurrency[lang]);
+    await AsyncStorage.setItem('language', lang);
+    setTitleIndex(0);
+  };
+
+  const saveCurrency = async (curr) => {
+    setCurrency(curr);
+    await AsyncStorage.setItem('currency', curr);
+  };
+
+  const saveTheme = async (dark) => {
+    setIsDark(dark);
+    await AsyncStorage.setItem('theme', dark ? 'dark' : 'light');
+  };
+
+  const calculate = () => {
+    const cQty = parseFloat(currentQty);
+    const cPrice = parseFloat(currentPrice);
+    const nPrice = parseFloat(newPrice);
+    const tPrice = parseFloat(targetPrice);
+
+    setResult(null);
+    setError(null);
+
+    if (isNaN(cQty) || isNaN(cPrice) || isNaN(nPrice) || isNaN(tPrice)) return;
+    if (cQty <= 0 || cPrice <= 0 || nPrice <= 0 || tPrice <= 0) return;
+
+    const isBetween = (nPrice < tPrice && tPrice < cPrice) || (cPrice < tPrice && tPrice < nPrice);
+
+    if (!isBetween) {
+      setError(tPrice === nPrice ? translations[language].errorEqual : translations[language].errorRange);
+      return;
+    }
+
+    const numerator = cQty * (cPrice - tPrice);
+    const denominator = tPrice - nPrice;
+    const requiredQty = numerator / denominator;
+
+    if (requiredQty > 0) {
+      const qtyRounded = Math.ceil(requiredQty);
+      const totalCost = qtyRounded * nPrice;
+      const newTotalQty = cQty + qtyRounded;
+
+      setResult({
+        qty: qtyRounded,
+        cost: totalCost,
+        newTotal: newTotalQty
+      });
+    }
+  };
+
+  // Recalculate whenever inputs change
+  useEffect(() => {
+    if (currentQty && currentPrice && newPrice && targetPrice) {
+      calculate();
+    }
+  }, [currentQty, currentPrice, newPrice, targetPrice]);
+
+  const t = translations[language];
+  const bgColor = isDark ? '#0f172a' : '#ffffff';
+  const textColor = isDark ? '#e5e7eb' : '#111827';
+  const cardBg = isDark ? '#1e293b' : '#f9fafb';
+  const borderColor = isDark ? '#334155' : '#e5e7eb';
+  const inputBg = isDark ? '#334155' : '#f3f4f6';
+  const secondaryText = isDark ? '#9ca3af' : '#6b7280';
+
+  const currentTitle = t.heroTitles[titleIndex];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={themeIdx === 1 ? 'dark-content' : 'light-content'} />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => setThemeIdx(themeIdx === 0 ? 1 : 0)}
-              style={[styles.btn, { backgroundColor: colors.primary }]}
-            >
-              <Ionicons name={themeIdx === 0 ? 'sunny' : 'moon'} size={20} color="white" />
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.title, { color: colors.text }]}>{t.title}</Text>
+    <>
+    <KeyboardAvoidingView 
+      style={{ flex: 1, backgroundColor: bgColor }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView 
+        style={{ flex: 1, backgroundColor: bgColor }} 
+        contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#3b82f6"
+            progressBackgroundColor={isDark ? '#1e293b' : '#ffffff'}
+          />
+        }
+      >
+      {/* Navigation */}
+      <View style={{ 
+        backgroundColor: bgColor, 
+        paddingTop: 70,
+        paddingBottom: 16, 
+        paddingHorizontal: 16, 
+        borderBottomWidth: 1, 
+        borderBottomColor: borderColor,
+      }}>
+        {/* Header Row */}
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12
+        }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor, flex: 1 }}>
+            Maliyet <Text style={{ color: '#3b82f6' }}>Hesaplayıcı</Text>
+          </Text>
+          
+          <Switch 
+            value={isDark} 
+            onValueChange={saveTheme}
+            trackColor={{ false: '#ccc', true: '#555' }}
+            thumbColor={isDark ? '#ffd700' : '#555'}
+          />
+        </View>
+
+        {/* Dil ve Döviz Seçenekleri */}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {/* Dil Dropdown */}
           <TouchableOpacity
-            onPress={() => setShowLangs(true)}
-            style={[styles.langBtn, { borderColor: colors.primary }]}
+            onPress={() => setShowLangMenu(true)}
+            style={{
+              flex: 1,
+              backgroundColor: inputBg,
+              borderWidth: 1,
+              borderColor: borderColor,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
           >
-            <Ionicons name="chevron-down" size={16} color={colors.primary} />
-            <Text style={[styles.langBtnText, { color: colors.primary }]}>{lang.toUpperCase()}</Text>
+            <Text style={{ color: textColor, fontWeight: '600', fontSize: 12 }}>
+              🌐 {language.toUpperCase()}
+            </Text>
+            <Text style={{ color: secondaryText }}>▼</Text>
+          </TouchableOpacity>
+
+          {/* Döviz Dropdown */}
+          <TouchableOpacity
+            onPress={() => setShowCurrencyMenu(true)}
+            style={{
+              flex: 1,
+              backgroundColor: inputBg,
+              borderWidth: 1,
+              borderColor: borderColor,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <Text style={{ color: textColor, fontWeight: '600', fontSize: 12 }}>
+              💱 {currency}
+            </Text>
+            <Text style={{ color: secondaryText }}>▼</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Hero Section */}
-        <View style={[styles.heroSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.heroContent}>
-            <Text style={[styles.heroTitlePart1, { color: colors.text }]}>Zararınızı</Text>
-            <View style={styles.heroTitleGradientContainer}>
-              <Text style={[styles.heroTitlePart2, { color: colors.gradientEnd }]}>Kara</Text>
-              <Text style={[styles.heroTitlePart2Space]} />
-              <Text style={[styles.heroTitlePart2, { color: colors.gradientStart }]}>Dönüştürün</Text>
-            </View>
-            <Text style={[styles.heroDesc, { color: colors.textSecond }]}>{t.heroDesc}</Text>
-          </View>
-        </View>
-
-        {/* Calculator Title */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.calculator}</Text>
-
-        {/* Input Fields */}
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.inputRow}>
-            <View style={styles.inputHalf}>
-              <InputField label={t.currentQty} value={currentQty} onChangeText={setCurrentQty} colors={colors} />
-            </View>
-            <View style={styles.inputHalf}>
-              <InputField label={t.currentAvg} value={currentAvg} onChangeText={setCurrentAvg} colors={colors} />
-            </View>
-          </View>
-
-          <View style={styles.inputRow}>
-            <View style={styles.inputHalf}>
-              <InputField label={t.newPrice} value={newPrice} onChangeText={setNewPrice} colors={colors} />
-            </View>
-            <View style={styles.inputHalf}>
-              <InputField label={t.targetAvg} value={targetAvg} onChangeText={setTargetAvg} colors={colors} />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={calculate}
-            style={[styles.calculateBtn, { backgroundColor: colors.accent }]}
-          >
-            <Text style={styles.calculateBtnText}>{t.calculate}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Results */}
-        {result && (
-          <View style={[styles.resultCard, { backgroundColor: colors.primary }]}>
-            <View style={styles.resultTopRow}>
-              <View>
-                <Text style={styles.resultLabel}>{t.buyingQty}</Text>
-                <Text style={styles.resultMainValue}>{result.qtyToBuy}</Text>
-              </View>
-              <View style={styles.resultRight}>
-                <Text style={[styles.resultSmallLabel, { color: colors.text }]}>{t.targetAvg2}</Text>
-                <Text style={[styles.resultSmallValue, { color: colors.text }]}>${result.totalNew}</Text>
-              </View>
-            </View>
-            <View style={styles.resultDivider} />
-            <View style={styles.resultBottom}>
-              <ResultRowWhite label={t.totalCost} value={`$${result.totalCost}`} />
-              <ResultRowWhite label={t.newAvg} value={`$${result.newAverage}`} />
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Language Selector */}
-      <Modal visible={showLangs} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.language}</Text>
+      {/* Language Menu Modal */}
+      <Modal visible={showLangMenu} transparent animationType="fade">
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }}
+          onPress={() => setShowLangMenu(false)}
+        >
+          <View style={{
+            backgroundColor: cardBg,
+            borderRadius: 12,
+            margin: 16,
+            marginTop: 120,
+            maxHeight: 400,
+            borderWidth: 1,
+            borderColor: borderColor
+          }}>
+            <Text style={{ 
+              fontSize: 14, 
+              fontWeight: 'bold', 
+              color: textColor, 
+              padding: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: borderColor
+            }}>
+              Dil Seç
+            </Text>
             <FlatList
-              data={codes}
-              keyExtractor={code => code}
-              renderItem={({ item: code }) => (
+              data={Object.keys(translations)}
+              keyExtractor={lang => lang}
+              scrollEnabled={true}
+              renderItem={({ item: lang }) => (
                 <TouchableOpacity
                   onPress={() => {
-                    setLang(code);
-                    setShowLangs(false);
+                    saveLanguage(lang);
+                    setShowLangMenu(false);
                   }}
-                  style={[styles.themeItem, { borderBottomColor: colors.border, backgroundColor: lang === code ? colors.primary + '20' : 'transparent' }]}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: borderColor,
+                    backgroundColor: language === lang ? '#3b82f6' : 'transparent'
+                  }}
                 >
-                  <Text style={[styles.themeText, { color: colors.text, fontWeight: lang === code ? 'bold' : 'normal' }]}>{langNames[code]}</Text>
+                  <Text style={{
+                    color: language === lang ? 'white' : textColor,
+                    fontWeight: language === lang ? 'bold' : '500',
+                    fontSize: 13
+                  }}>
+                    {lang === 'tr' ? '🇹🇷' : lang === 'en' ? '🇺🇸' : lang === 'de' ? '🇩🇪' : lang === 'ru' ? '🇷🇺' : lang === 'it' ? '🇮🇹' : lang === 'fr' ? '🇫🇷' : lang === 'es' ? '🇪🇸' : lang === 'pt' ? '🇵🇹' : lang === 'ja' ? '🇯🇵' : '🇨🇳'} {lang.toUpperCase()}
+                  </Text>
                 </TouchableOpacity>
               )}
-              scrollEnabled={false}
             />
-            <TouchableOpacity onPress={() => setShowLangs(false)} style={[styles.closeBtn, { backgroundColor: colors.primary }]}>
-              <Text style={styles.closeBtnText}>Close</Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Currency Menu Modal */}
+      <Modal visible={showCurrencyMenu} transparent animationType="fade">
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }}
+          onPress={() => setShowCurrencyMenu(false)}
+        >
+          <View style={{
+            backgroundColor: cardBg,
+            borderRadius: 12,
+            margin: 16,
+            marginTop: 120,
+            maxHeight: 400,
+            borderWidth: 1,
+            borderColor: borderColor
+          }}>
+            <Text style={{ 
+              fontSize: 14, 
+              fontWeight: 'bold', 
+              color: textColor, 
+              padding: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: borderColor
+            }}>
+              Döviz Seç
+            </Text>
+            <FlatList
+              data={Object.keys(currencySymbols)}
+              keyExtractor={curr => curr}
+              scrollEnabled={true}
+              renderItem={({ item: curr }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    saveCurrency(curr);
+                    setShowCurrencyMenu(false);
+                  }}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: borderColor,
+                    backgroundColor: currency === curr ? '#3b82f6' : 'transparent'
+                  }}
+                >
+                  <Text style={{
+                    color: currency === curr ? 'white' : textColor,
+                    fontWeight: currency === curr ? 'bold' : '500',
+                    fontSize: 13
+                  }}>
+                    {currencySymbols[curr]} {curr}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Hero Section */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 32, alignItems: 'center' }}>
+        <Text style={{ 
+          fontSize: 32, 
+          fontWeight: 'bold', 
+          color: textColor,
+          textAlign: 'center',
+          marginBottom: 8
+        }}>
+          {currentTitle.t1}
+        </Text>
+        <Text style={{ 
+          fontSize: 32, 
+          fontWeight: 'bold', 
+          color: '#3b82f6',
+          textAlign: 'center',
+          marginBottom: 16
+        }}>
+          {currentTitle.t2}
+        </Text>
+        <Text style={{ 
+          fontSize: 14, 
+          color: secondaryText,
+          textAlign: 'center',
+          marginBottom: 16,
+          lineHeight: 20
+        }}>
+          {t.heroDesc}
+        </Text>
+      </View>
+
+      {/* Calculator Card */}
+      <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
+        <View style={{ 
+          backgroundColor: cardBg, 
+          borderRadius: 20, 
+          padding: 16,
+          borderWidth: 1,
+          borderColor: borderColor
+        }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>
+              {t.calcTitle}
+            </Text>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' }} />
+          </View>
+
+          {/* Input Grid */}
+          <View style={{ gap: 16 }}>
+            {/* Row 1 */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                  {t.labelCurrentQty}
+                </Text>
+                <TextInput 
+                  placeholder="0"
+                  keyboardType="decimal-pad"
+                  value={currentQty}
+                  onChangeText={setCurrentQty}
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 1,
+                    borderColor: borderColor,
+                    borderRadius: 12,
+                    padding: 12,
+                    color: textColor,
+                    fontSize: 16
+                  }}
+                  placeholderTextColor={secondaryText}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                  {t.labelCurrentPrice}
+                </Text>
+                <TextInput 
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={currentPrice}
+                  onChangeText={setCurrentPrice}
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 1,
+                    borderColor: borderColor,
+                    borderRadius: 12,
+                    padding: 12,
+                    color: textColor,
+                    fontSize: 16
+                  }}
+                  placeholderTextColor={secondaryText}
+                />
+              </View>
+            </View>
+
+            {/* Row 2 */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                  {t.labelNewPrice}
+                </Text>
+                <TextInput 
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={newPrice}
+                  onChangeText={setNewPrice}
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 1,
+                    borderColor: borderColor,
+                    borderRadius: 12,
+                    padding: 12,
+                    color: textColor,
+                    fontSize: 16
+                  }}
+                  placeholderTextColor={secondaryText}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase', fontWeight: 'bold' }}>
+                  {t.labelTargetPrice}
+                </Text>
+                <TextInput 
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={targetPrice}
+                  onChangeText={setTargetPrice}
+                  style={{
+                    backgroundColor: inputBg,
+                    borderWidth: 2,
+                    borderColor: '#3b82f6',
+                    borderRadius: 12,
+                    padding: 12,
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: 'bold'
+                  }}
+                  placeholderTextColor={secondaryText}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Result */}
+          {result && !error && (
+            <View style={{ 
+              backgroundColor: '#3b82f6', 
+              borderRadius: 16, 
+              padding: 16, 
+              marginTop: 16
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+                <View>
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
+                    {t.resultTitle}
+                  </Text>
+                  <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
+                    {result.qty}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 11, color: '#bfdbfe', textTransform: 'uppercase' }}>
+                    {t.totalCost}
+                  </Text>
+                  <Text style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>
+                    {currencySymbols[currency]}{result.cost.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.2)', paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 13, color: '#bfdbfe' }}>
+                  {t.newTotalQty}
+                </Text>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
+                  {result.newTotal}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Error */}
+          {error && (
+            <View style={{ 
+              backgroundColor: isDark ? '#7f1d1d' : '#fee2e2', 
+              borderRadius: 16, 
+              padding: 12, 
+              marginTop: 16
+            }}>
+              <Text style={{ color: isDark ? '#fca5a5' : '#991b1b', fontSize: 13, fontWeight: '500', textAlign: 'center' }}>
+                {error}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Footer */}
+    </ScrollView>
+
+    {/* Footer */}
+    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 12 }}>
+      <View style={{ 
+        borderTopWidth: 1, 
+        borderTopColor: borderColor, 
+        paddingTop: 16, 
+        paddingBottom: 8,
+        alignItems: 'center'
+      }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+          <TouchableOpacity onPress={() => { setLegalType('privacy'); setShowLegalMenu(true); }}>
+            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
+              {t.privacyTitle}
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 12, color: secondaryText }}>•</Text>
+          <TouchableOpacity onPress={() => { setLegalType('terms'); setShowLegalMenu(true); }}>
+            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
+              {t.termsTitle}
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 12, color: secondaryText }}>•</Text>
+          <TouchableOpacity onPress={() => { setLegalType('about'); setShowLegalMenu(true); }}>
+            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
+              {t.aboutTitle}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={{ fontSize: 11, color: secondaryText, textAlign: 'center' }}>
+          Borsa Maliyet Hesaplayıcı • v1.0 • 2025
+        </Text>
+      </View>
+    </View>
+    </KeyboardAvoidingView>
+
+    {/* Legal Content Modal */}
+    <Modal
+      visible={showLegalMenu} 
+      visible={showLegalMenu} 
+      transparent 
+      animationType="fade"
+      onRequestClose={() => setShowLegalMenu(false)}
+    >
+      <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+        <View style={{ 
+          backgroundColor: cardBg, 
+          borderRadius: 16, 
+          maxHeight: '80%',
+          width: '100%',
+          borderWidth: 1,
+          borderColor: borderColor
+        }}>
+          {/* Header */}
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: borderColor
+          }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor, flex: 1 }}>
+              {legalType === 'privacy' && t.privacyTitle}
+              {legalType === 'terms' && t.termsTitle}
+              {legalType === 'about' && t.aboutTitle}
+            </Text>
+            <TouchableOpacity onPress={() => setShowLegalMenu(false)}>
+              <Text style={{ fontSize: 20, color: secondaryText, fontWeight: '300' }}>✕</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Content */}
+          <ScrollView style={{ padding: 16 }}>
+            <Text style={{ fontSize: 14, color: textColor, lineHeight: 22 }}>
+              {legalType === 'privacy' && t.privacy}
+              {legalType === 'terms' && t.terms}
+              {legalType === 'about' && t.about}
+            </Text>
+          </ScrollView>
         </View>
-      </Modal>
-    </View>
+      </View>
+    </Modal>
+    </>
   );
 }
-
-function InputField({ label, value, onChangeText, colors }) {
-  return (
-    <View style={styles.inputContainer}>
-      <Text style={[styles.label, { color: colors.textSecond }]}>{label}</Text>
-      <TextInput
-        style={[styles.input, { backgroundColor: colors.bg, borderColor: colors.border, color: colors.text }]}
-        placeholder="0"
-        placeholderTextColor={colors.textSecond}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType="decimal-pad"
-      />
-    </View>
-  );
-}
-
-function ResultRow({ label, value, colors }) {
-  return (
-    <View style={styles.resultRow}>
-      <Text style={[styles.resultLabel, { color: colors.textSecond }]}>{label}</Text>
-      <Text style={[styles.resultValue, { color: colors.primary }]}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scroll: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingBottom: 20,
-    marginBottom: 24,
-    borderBottomWidth: 2,
-  },
-  headerLeft: {
-    width: 48,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  langBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 4,
-    minWidth: 60,
-    justifyContent: 'center',
-  },
-  langBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  controls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  btn: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heroSection: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 32,
-  },
-  heroContent: {
-    alignItems: 'center',
-  },
-  heroTitlePart1: {
-    fontSize: 36,
-    fontWeight: '700',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  heroTitleGradientContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    flexWrap: 'wrap',
-  },
-  heroTitlePart2: {
-    fontSize: 36,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  heroTitlePart2Space: {
-    width: 8,
-  },
-  heroDesc: {
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  inputHalf: {
-    flex: 1,
-  },
-  inputContainer: {
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  calculateBtn: {
-    borderRadius: 8,
-    paddingVertical: 12,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  calculateBtnText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  resultCard: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-  },
-  resultTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  resultLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  resultMainValue: {
-    color: 'white',
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  resultRight: {
-    alignItems: 'flex-end',
-  },
-  resultSmallLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  resultSmallValue: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  resultDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginBottom: 16,
-  },
-  resultBottom: {
-    gap: 12,
-  },
-  resultRowWhite: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  resultLabelWhite: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 13,
-  },
-  resultValueWhite: {
-    color: 'white',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  resultTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  resultRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#444',
-  },
-  resultLabel: {
-    fontSize: 14,
-  },
-  resultValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    borderRadius: 12,
-    maxHeight: '70%',
-    width: '100%',
-    overflow: 'hidden',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  themeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-  },
-  colorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  themeText: {
-    fontSize: 14,
-  },
-  closeBtn: {
-    padding: 12,
-    alignItems: 'center',
-    margin: 8,
-    borderRadius: 8,
-  },
-  closeBtnText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-});
