@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // Custom Text component with font scaling disabled
 const Text = (props) => <RNText allowFontScaling={false} {...props} />;
@@ -614,12 +615,44 @@ export default function App() {
             {language === 'zh' && <><Text>股票</Text><Text style={{ color: '#3b82f6' }}>成本计算器</Text></>}
           </Text>
           
-          <Switch 
-            value={isDark} 
-            onValueChange={saveTheme}
-            trackColor={{ false: '#ccc', true: '#555' }}
-            thumbColor={isDark ? '#ffd700' : '#555'}
-          />
+          <TouchableOpacity 
+            onPress={() => saveTheme(!isDark)}
+            style={{
+              backgroundColor: isDark ? '#374151' : '#d1d5db',
+              borderRadius: 24,
+              width: 56,
+              height: 28,
+              justifyContent: isDark ? 'flex-end' : 'flex-start',
+              paddingHorizontal: 2,
+              paddingVertical: 2,
+              flexDirection: 'row',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 3,
+              elevation: 2
+            }}
+          >
+            <View style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: 'white',
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.2,
+              shadowRadius: 3,
+              elevation: 4
+            }}>
+              {/* Moon Icon - Light Mode */}
+              {!isDark && <MaterialIcons name="nights-stay" size={16} color="#4b5563" />}
+              
+              {/* Sun Icon - Dark Mode */}
+              {isDark && <MaterialIcons name="wb-sunny" size={16} color="#fbbf24" />}
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Dil ve Döviz Seçenekleri */}
@@ -933,7 +966,6 @@ export default function App() {
               style={{ 
                 borderRadius: 16, 
                 marginTop: 16, 
-                marginHorizontal: 16,
                 marginBottom: 20,
                 backgroundColor: '#3b82f6',
                 overflow: 'hidden',
