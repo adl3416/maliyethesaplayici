@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Text, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
+
+// Custom Text component with font scaling disabled
+const Text = (props) => <RNText allowFontScaling={false} {...props} />;
 
 const translations = {
   tr: {
@@ -331,28 +334,56 @@ export default function App() {
 
   const loadSettings = async () => {
     try {
-      // Her açılışta device language'i kontrol et
-      const locales = await Localization.getLocalesAsync();
-      const deviceLangCode = locales?.[0]?.languageCode || 'en';
+      let detectedLang = 'en';
       
-      const supportedLangs = Object.keys(translations);
-      const detectedLang = supportedLangs.includes(deviceLangCode) ? deviceLangCode : 'en';
+      // Try different methods to detect device language
+      try {
+        // Method 1: Localization.locale
+        if (Localization.locale) {
+          const locale = Localization.locale;
+          console.log('Method 1 - Localization.locale:', locale);
+          detectedLang = locale.split('-')[0];
+        }
+        // Method 2: Localization.locales (array)
+        else if (Localization.locales && Localization.locales.length > 0) {
+          console.log('Method 2 - Localization.locales:', Localization.locales);
+          detectedLang = Localization.locales[0].split('-')[0];
+        }
+        // Method 3: Direct property
+        else if (Localization.getLocales && typeof Localization.getLocales === 'function') {
+          const locales = Localization.getLocales();
+          console.log('Method 3 - getLocales():', locales);
+          detectedLang = locales[0]?.languageCode || 'en';
+        }
+      } catch (locErr) {
+        console.log('Device detection attempt failed:', locErr);
+        detectedLang = 'en';
+      }
+      
+      // Validate language
+      const supportedLangs = ['tr', 'en', 'de', 'ru', 'it', 'fr', 'es', 'pt', 'ja', 'zh'];
+      detectedLang = supportedLangs.includes(detectedLang) ? detectedLang : 'en';
+      console.log('Final language to set:', detectedLang);
       
       setDeviceLangCode(detectedLang);
       setLanguage(detectedLang);
       
-      // Theme için AsyncStorage'i kontrol et
+      // Theme
       const savedTheme = await AsyncStorage.getItem('theme');
       if (savedTheme) setIsDark(savedTheme === 'dark');
       else setIsDark(systemColorScheme === 'dark');
       
-      // Currency - device language'e göre otomatik ayarla
-      setCurrency(langToCurrency[detectedLang]);
+      // Currency
+      const currencyMap = {
+        'tr': 'TRY', 'en': 'USD', 'de': 'EUR', 'ru': 'RUB', 'it': 'EUR',
+        'fr': 'EUR', 'es': 'EUR', 'pt': 'EUR', 'ja': 'JPY', 'zh': 'CNY'
+      };
+      setCurrency(currencyMap[detectedLang]);
     } catch (e) {
+      console.log('Critical error in loadSettings:', e);
       setLanguage('en');
       setCurrency('USD');
     } finally {
-      // Splash screen'i 2 saniye göster
       await new Promise(resolve => setTimeout(resolve, 2000));
       setShowSplash(false);
       setAppReady(true);
@@ -512,12 +543,12 @@ export default function App() {
           </View>
         </View>
         
-        <Text style={{ fontSize: 32, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+        <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', paddingHorizontal: 20 }}>
           <Text style={{ color: '#475569' }}>{names[0]} </Text>
           <Text style={{ color: '#3b82f6' }}>{names.slice(1).join(' ')}</Text>
         </Text>
         
-        <Text style={{ color: '#64748b', fontSize: 14, marginBottom: 40 }}>
+        <Text style={{ color: '#64748b', fontSize: 11, marginBottom: 40 }}>
           {splashText.desc}
         </Text>
         
@@ -754,7 +785,7 @@ export default function App() {
       </Modal>
 
       {/* Hero Section */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 32, alignItems: 'center' }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center' }}>
         <Text style={{ 
           fontSize: 32, 
           fontWeight: 'bold', 
@@ -769,15 +800,15 @@ export default function App() {
           fontWeight: 'bold', 
           color: '#3b82f6',
           textAlign: 'center',
-          marginBottom: 16
+          marginBottom: 6
         }}>
           {currentTitle.t2}
         </Text>
         <Text style={{ 
-          fontSize: 14, 
+          fontSize: 11, 
           color: secondaryText,
           textAlign: 'center',
-          marginBottom: 16,
+          marginBottom: 8,
           lineHeight: 20
         }}>
           {t.heroDesc}
@@ -785,7 +816,7 @@ export default function App() {
       </View>
 
       {/* Calculator Card */}
-      <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 20, marginBottom: 40 }}>
         <View style={{ 
           backgroundColor: cardBg, 
           borderRadius: 20, 
@@ -801,7 +832,7 @@ export default function App() {
           </View>
 
           {/* Input Grid */}
-          <View style={{ gap: 16 }}>
+          <View style={{ gap: 20 }}>
             {/* Row 1 */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
@@ -968,11 +999,11 @@ export default function App() {
       <View style={{ 
         borderTopWidth: 1, 
         borderTopColor: borderColor, 
-        paddingTop: 16, 
-        paddingBottom: 8,
+        paddingTop: 12, 
+        paddingBottom: 10,
         alignItems: 'center'
       }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 6 }}>
           <TouchableOpacity onPress={() => { setLegalType('privacy'); setShowLegalMenu(true); }}>
             <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
               {t.privacyTitle}
