@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -70,13 +70,13 @@ const translations = {
     ],
     heroDesc: "Berechnen Sie in Sekunden genau, wie viele Einheiten Sie kaufen müssen, um Ihren Zieldurchschnittspreis zu erreichen.",
     calcTitle: "Rechner",
-    labelCurrentQty: "Aktuelle Menge",
-    labelCurrentPrice: "Aktueller Durchschnittspreis",
+    labelCurrentQty: "Akt. Menge",
+    labelCurrentPrice: "Akt. Ø-Preis",
     labelNewPrice: "Neuer Preis",
-    labelTargetPrice: "Ziel-Durchschnittspreis",
-    resultTitle: "Zu kaufende Menge",
-    totalCost: "Geschätzte Kosten",
-    newTotalQty: "Neue Gesamtmenge:",
+    labelTargetPrice: "Ziel Ø-Preis",
+    resultTitle: "Kaufmenge",
+    totalCost: "Ges. Kosten",
+    newTotalQty: "Gesamt:",
     errorRange: "Der Zielpreis muss zwischen dem aktuellen Preis und dem neuen Preis liegen.",
     errorEqual: "Der Zielpreis kann nicht gleich dem neuen Preis sein.",
     privacyTitle: "Datenschutzrichtlinie",
@@ -96,10 +96,10 @@ const translations = {
     ],
     heroDesc: "Точно рассчитайте, сколько единиц вам нужно купить, чтобы достичь целевой средней цены за считанные секунды.",
     calcTitle: "Калькулятор",
-    labelCurrentQty: "Текущее Количество",
-    labelCurrentPrice: "Текущая Средняя Цена",
+    labelCurrentQty: "Текущее Кол-во",
+    labelCurrentPrice: "Тек. Ср. Цена",
     labelNewPrice: "Новая Цена",
-    labelTargetPrice: "Целевая Средняя Цена",
+    labelTargetPrice: "Целевая Ср. Цена",
     resultTitle: "Количество к Покупке",
     totalCost: "Предполагаемая Стоимость",
     newTotalQty: "Новый Итог:",
@@ -174,10 +174,10 @@ const translations = {
     ],
     heroDesc: "Calcula con precisión cuántas unidades necesitas comprar para alcanzar tu precio promedio objetivo en segundos.",
     calcTitle: "Calculadora",
-    labelCurrentQty: "Cantidad Actual",
-    labelCurrentPrice: "Precio Promedio Actual",
+    labelCurrentQty: "Cant. Actual",
+    labelCurrentPrice: "Precio Prom. Act.",
     labelNewPrice: "Nuevo Precio",
-    labelTargetPrice: "Precio Promedio Objetivo",
+    labelTargetPrice: "Precio Prom. Obj.",
     resultTitle: "Cantidad a Comprar",
     totalCost: "Costo Estimado",
     newTotalQty: "Nuevo Total:",
@@ -318,11 +318,22 @@ export default function App() {
   const [deviceLangCode, setDeviceLangCode] = useState('en');
 
   const titleRotationRef = useRef(null);
+  const scrollRef = useRef(null);
+  
   useEffect(() => {
     const initializeApp = async () => {
       await loadSettings();
     };
     initializeApp();
+
+    const keyboardHideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const keyboardHideSubscription = Keyboard.addListener(keyboardHideEvent, () => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => {
+      keyboardHideSubscription.remove();
+    };
   }, []);
 
   // Title rotation
@@ -425,6 +436,14 @@ export default function App() {
   const saveTheme = async (dark) => {
     setIsDark(dark);
     await AsyncStorage.setItem('theme', dark ? 'dark' : 'light');
+  };
+
+  const scrollToInputs = () => {
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ y: 195, animated: true });
+      }
+    }, 50);
   };
 
   const calculate = () => {
@@ -696,8 +715,9 @@ export default function App() {
       </View>
 
       <ScrollView 
+        ref={scrollRef}
         style={{ flex: 1, backgroundColor: bgColor }} 
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl 
@@ -876,7 +896,10 @@ export default function App() {
             {/* Row 1 */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                <Text 
+                  numberOfLines={1} 
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                >
                   {t.labelCurrentQty}
                 </Text>
                 <TextInput 
@@ -884,6 +907,7 @@ export default function App() {
                   keyboardType="decimal-pad"
                   value={currentQty}
                   onChangeText={setCurrentQty}
+                  onFocus={scrollToInputs}
                   style={{
                     backgroundColor: inputBg,
                     borderWidth: 1,
@@ -897,7 +921,10 @@ export default function App() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                <Text 
+                  numberOfLines={1} 
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                >
                   {t.labelCurrentPrice}
                 </Text>
                 <TextInput 
@@ -905,6 +932,7 @@ export default function App() {
                   keyboardType="decimal-pad"
                   value={currentPrice}
                   onChangeText={setCurrentPrice}
+                  onFocus={scrollToInputs}
                   style={{
                     backgroundColor: inputBg,
                     borderWidth: 1,
@@ -922,7 +950,10 @@ export default function App() {
             {/* Row 2 */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}>
+                <Text 
+                  numberOfLines={1} 
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                >
                   {t.labelNewPrice}
                 </Text>
                 <TextInput 
@@ -930,6 +961,7 @@ export default function App() {
                   keyboardType="decimal-pad"
                   value={newPrice}
                   onChangeText={setNewPrice}
+                  onFocus={scrollToInputs}
                   style={{
                     backgroundColor: inputBg,
                     borderWidth: 1,
@@ -943,7 +975,10 @@ export default function App() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase' }}>
+                <Text 
+                  numberOfLines={1} 
+                  style={{ fontSize: 10, fontWeight: 'bold', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase' }}
+                >
                   {t.labelTargetPrice}
                 </Text>
                 <TextInput 
@@ -951,6 +986,7 @@ export default function App() {
                   keyboardType="decimal-pad"
                   value={targetPrice}
                   onChangeText={setTargetPrice}
+                  onFocus={scrollToInputs}
                   style={{
                     backgroundColor: inputBg,
                     borderWidth: 1.5,
@@ -985,28 +1021,28 @@ export default function App() {
             >
               <View style={{ padding: 16 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
-                  <View>
-                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
+                  <View style={{ flex: 1.2 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
                       {t.resultTitle}
                     </Text>
-                    <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
                       {result.qty}
                     </Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 11, color: '#bfdbfe', textTransform: 'uppercase' }}>
+                  <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                    <Text numberOfLines={1} style={{ fontSize: 10, color: '#bfdbfe', textTransform: 'uppercase' }}>
                       {t.totalCost}
                     </Text>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>
+                    <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>
                       {currencySymbols[currency]}{result.cost.toFixed(2)}
                     </Text>
                   </View>
                 </View>
                 <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.2)', paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 13, color: '#bfdbfe' }}>
+                  <Text numberOfLines={1} style={{ fontSize: 12, color: '#bfdbfe' }}>
                     {t.newTotalQty}
                   </Text>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
+                  <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: 'bold', color: 'white' }}>
                     {result.newTotal}
                   </Text>
                 </View>
@@ -1029,12 +1065,10 @@ export default function App() {
           )}
         </View>
       </View>
-
-      {/* Footer */}
     </ScrollView>
 
-    {/* Footer */}
-    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 0 }}>
+    {/* Footer back to bottom with fixed position */}
+    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 10 }}>
       <View style={{ 
         borderTopWidth: 1, 
         borderTopColor: borderColor, 
