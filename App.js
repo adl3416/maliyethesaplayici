@@ -12,7 +12,7 @@ const translations = {
     navTitle: "Borsa Maliyet Hesaplayıcı",
     heroTitles: [
       { t1: "Yatırımlarınızı", t2: "Akıllıca Yönetin" },
-      { t1: "Zararınızı", t2: "Kara Dönüştürün" },
+      { t1: "Zararınızı", t2: "Kâra Dönüştürün" },
       { t1: "Ortalama Maliyeti", t2: "Optimize Edin" }
     ],
     heroDesc: "Hedef ortalama fiyata ulaşmak için kaç birim satın almanız gerektiğini saniyeler içinde doğru hesaplayın.",
