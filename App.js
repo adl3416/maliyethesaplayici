@@ -62,8 +62,9 @@ const translations = {
   },
   de: {
     navTitle: "Aktienkosten-Rechner",
+    footerText: "Aktienkosten-Rechner • v1.0.2025",
     heroTitles: [
-      { t1: "Verwalten Sie Ihre", t2: "Investitionen Weise" },
+      { t1: "Verwalten Sie Ihre", t2: "Investitionen klug" },
       { t1: "Verwandeln Sie Ihre", t2: "Verluste in Gewinne" },
       { t1: "Optimieren Sie Ihre", t2: "Durchschnittskosten" }
     ],
@@ -75,7 +76,7 @@ const translations = {
     labelTargetPrice: "Ziel-Durchschnittspreis",
     resultTitle: "Zu kaufende Menge",
     totalCost: "Geschätzte Kosten",
-    newTotalQty: "Neuer Gesamtbetrag:",
+    newTotalQty: "Neue Gesamtmenge:",
     errorRange: "Der Zielpreis muss zwischen dem aktuellen Preis und dem neuen Preis liegen.",
     errorEqual: "Der Zielpreis kann nicht gleich dem neuen Preis sein.",
     privacyTitle: "Datenschutzrichtlinie",
@@ -165,6 +166,7 @@ const translations = {
   },
   es: {
     navTitle: "Calculadora de Costo de Acciones",
+    footerText: "Calculadora de Costo • v1.0.2025",
     heroTitles: [
       { t1: "Gestiona Tus", t2: "Inversiones Sabiamente" },
       { t1: "Convierte Tus", t2: "Pérdidas en Ganancias" },
@@ -202,7 +204,7 @@ const translations = {
     labelCurrentPrice: "Preço Médio Atual",
     labelNewPrice: "Novo Preço",
     labelTargetPrice: "Preço Médio Alvo",
-    resultTitle: "A Comprar",
+    resultTitle: "Quantidade a Comprar",
     totalCost: "Custo Estimado",
     newTotalQty: "Novo Total:",
     errorRange: "O preço alvo deve estar entre o preço atual e o novo preço.",
@@ -216,6 +218,7 @@ const translations = {
   },
   ja: {
     navTitle: "株式コスト計算機",
+    footerText: "株式コスト計算機 • v1.0.2025",
     heroTitles: [
       { t1: "投資を", t2: "賢く管理" },
       { t1: "損失を", t2: "利益に変換" },
@@ -241,6 +244,7 @@ const translations = {
   },
   zh: {
     navTitle: "股票成本计算器",
+    footerText: "股票成本计算器 • v1.0.2025",
     heroTitles: [
       { t1: "智能管理", t2: "您的投资" },
       { t1: "将亏损", t2: "转为盈利" },
@@ -573,27 +577,15 @@ export default function App() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView 
-        style={{ flex: 1, backgroundColor: bgColor }} 
-        contentContainerStyle={{ paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh}
-            tintColor="#3b82f6"
-            progressBackgroundColor={isDark ? '#1e293b' : '#ffffff'}
-          />
-        }
-      >
-      {/* Navigation */}
+      {/* Navigation - Moved outside ScrollView to fix RefreshControl position */}
       <View style={{ 
         backgroundColor: bgColor, 
-        paddingTop: 70,
+        paddingTop: Platform.OS === 'ios' ? 60 : 50,
         paddingBottom: 16, 
         paddingHorizontal: 16, 
         borderBottomWidth: 1, 
         borderBottomColor: borderColor,
+        zIndex: 10
       }}>
         {/* Header Row */}
         <View style={{
@@ -702,6 +694,20 @@ export default function App() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ScrollView 
+        style={{ flex: 1, backgroundColor: bgColor }} 
+        contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#3b82f6"
+            progressBackgroundColor={isDark ? '#1e293b' : '#ffffff'}
+          />
+        }
+      >
 
       {/* Language Menu Modal */}
       <Modal visible={showLangMenu} transparent animationType="fade">
@@ -849,11 +855,12 @@ export default function App() {
       </View>
 
       {/* Calculator Card */}
-      <View style={{ marginHorizontal: 16, marginTop: 20, marginBottom: 40 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 28, marginBottom: 28 }}>
         <View style={{ 
           backgroundColor: cardBg, 
           borderRadius: 20, 
-          padding: 16,
+          padding: 20,
+          paddingBottom: 27,
           borderWidth: 1,
           borderColor: borderColor
         }}>
@@ -936,7 +943,7 @@ export default function App() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase', fontWeight: 'bold' }}>
+                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase' }}>
                   {t.labelTargetPrice}
                 </Text>
                 <TextInput 
@@ -946,7 +953,7 @@ export default function App() {
                   onChangeText={setTargetPrice}
                   style={{
                     backgroundColor: inputBg,
-                    borderWidth: 2,
+                    borderWidth: 1.5,
                     borderColor: '#3b82f6',
                     borderRadius: 12,
                     padding: 12,
@@ -966,7 +973,7 @@ export default function App() {
               style={{ 
                 borderRadius: 16, 
                 marginTop: 16, 
-                marginBottom: 20,
+                marginBottom: 0,
                 backgroundColor: '#3b82f6',
                 overflow: 'hidden',
                 shadowColor: '#1e3a8a',
@@ -977,7 +984,7 @@ export default function App() {
               }}
             >
               <View style={{ padding: 16 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
                   <View>
                     <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
                       {t.resultTitle}
@@ -1027,7 +1034,7 @@ export default function App() {
     </ScrollView>
 
     {/* Footer */}
-    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 12 }}>
+    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 0 }}>
       <View style={{ 
         borderTopWidth: 1, 
         borderTopColor: borderColor, 
@@ -1035,25 +1042,6 @@ export default function App() {
         paddingBottom: 10,
         alignItems: 'center'
       }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 6 }}>
-          <TouchableOpacity onPress={() => { setLegalType('privacy'); setShowLegalMenu(true); }}>
-            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
-              {t.privacyTitle}
-            </Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 12, color: secondaryText }}>•</Text>
-          <TouchableOpacity onPress={() => { setLegalType('terms'); setShowLegalMenu(true); }}>
-            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
-              {t.termsTitle}
-            </Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 12, color: secondaryText }}>•</Text>
-          <TouchableOpacity onPress={() => { setLegalType('about'); setShowLegalMenu(true); }}>
-            <Text style={{ fontSize: 12, color: '#3b82f6', fontWeight: '600' }}>
-              {t.aboutTitle}
-            </Text>
-          </TouchableOpacity>
-        </View>
         <Text style={{ fontSize: 11, color: secondaryText, textAlign: 'center' }}>
           {t.footerText || `${t.navTitle} • v1.0.2025`}
         </Text>
