@@ -845,24 +845,34 @@ export default function App() {
 
       {/* Hero Section */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center' }}>
-        <Text style={{ 
-          fontSize: 32, 
-          fontWeight: 'bold', 
-          color: textColor,
-          textAlign: 'center',
-          marginBottom: 8
-        }}>
-          {currentTitle.t1}
-        </Text>
-        <Text style={{ 
-          fontSize: 32, 
-          fontWeight: 'bold', 
-          color: '#3b82f6',
-          textAlign: 'center',
-          marginBottom: 6
-        }}>
-          {currentTitle.t2}
-        </Text>
+        <View style={{ width: '100%', alignItems: 'center' }}>
+          <Text 
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={{ 
+              fontSize: 32, 
+              fontWeight: 'bold', 
+              color: textColor,
+              textAlign: 'center',
+              marginBottom: 8
+            }}
+          >
+            {currentTitle.t1}
+          </Text>
+          <Text 
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={{ 
+              fontSize: 32, 
+              fontWeight: 'bold', 
+              color: '#3b82f6',
+              textAlign: 'center',
+              marginBottom: 6
+            }}
+          >
+            {currentTitle.t2}
+          </Text>
+        </View>
         <Text style={{ 
           fontSize: 11, 
           color: secondaryText,
