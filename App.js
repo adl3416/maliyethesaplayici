@@ -17,13 +17,13 @@ const translations = {
     ],
     heroDesc: "Hedef ortalama fiyata ulaşmak için kaç birim satın almanız gerektiğini saniyeler içinde doğru hesaplayın.",
     calcTitle: "Hesaplayıcı",
-    labelCurrentQty: "Güncel Miktar",
-    labelCurrentPrice: "Güncel Ort. Fiyatı",
-    labelNewPrice: "Yeni Fiyat",
-    labelTargetPrice: "Hedef Ort. Fiyatı",
-    resultTitle: "Satın Alınacak Miktar",
-    totalCost: "Tahmini Maliyet",
-    newTotalQty: "Yeni Toplam:",
+    labelCurrentQty: "Güncel Mİktar",
+    labelCurrentPrice: "Güncel Ort. Fİyatı",
+    labelNewPrice: "Yenİ Fİyat",
+    labelTargetPrice: "Hedef Ort. Fİyatı",
+    resultTitle: "Satın Alınacak Mİktar",
+    totalCost: "Tahmİnİ Malİyet",
+    newTotalQty: "Yenİ Toplam:",
     errorRange: "Hedef fiyat, güncel fiyat ile yeni fiyat arasında olmalıdır.",
     errorEqual: "Hedef fiyat yeni fiyata eşit olamaz.",
     privacyTitle: "Gizlilik Politikası",
@@ -479,6 +479,9 @@ export default function App() {
         cost: totalCost,
         newTotal: newTotalQty
       });
+      
+      // Klavyeyi kapat
+      Keyboard.dismiss();
     }
   };
 
@@ -685,7 +688,7 @@ export default function App() {
             }}
           >
             <Text style={{ color: textColor, fontWeight: '600', fontSize: 12 }}>
-              🌐 {language.toUpperCase()}
+              {language === 'tr' ? '🇹🇷' : language === 'en' ? '🇺🇸' : language === 'de' ? '🇩🇪' : language === 'ru' ? '🇷🇺' : language === 'it' ? '🇮🇹' : language === 'fr' ? '🇫🇷' : language === 'es' ? '🇪🇸' : language === 'pt' ? '🇵🇹' : language === 'ja' ? '🇯🇵' : '🇨🇳'} {language.toUpperCase()}
             </Text>
             <Text style={{ color: secondaryText }}>▼</Text>
           </TouchableOpacity>
@@ -844,7 +847,7 @@ export default function App() {
       </Modal>
 
       {/* Hero Section */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 28, paddingBottom: 20, alignItems: 'center' }}>
         <View style={{ width: '100%', alignItems: 'center' }}>
           <Text 
             numberOfLines={1}
@@ -885,7 +888,7 @@ export default function App() {
       </View>
 
       {/* Calculator Card */}
-      <View style={{ marginHorizontal: 16, marginTop: 28, marginBottom: 28 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 22, marginBottom: 24 }}>
         <View style={{ 
           backgroundColor: cardBg, 
           borderRadius: 20, 
@@ -1095,7 +1098,6 @@ export default function App() {
 
     {/* Legal Content Modal */}
     <Modal
-      visible={showLegalMenu} 
       visible={showLegalMenu} 
       transparent 
       animationType="fade"
