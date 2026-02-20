@@ -3,6 +3,7 @@ import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColor
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Custom Text component with font scaling disabled
 const Text = (props) => <RNText allowFontScaling={false} {...props} />;
@@ -315,6 +316,8 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingPage, setOnboardingPage] = useState(0);
   const [deviceLangCode, setDeviceLangCode] = useState('en');
 
   const titleRotationRef = useRef(null);
@@ -400,8 +403,16 @@ export default function App() {
       setLanguage('en');
       setCurrency('USD');
     } finally {
+      // Onboarding gösterilmiş mi kontrol et
+      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       setShowSplash(false);
+      
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+      }
+      
       setAppReady(true);
     }
   };
@@ -519,76 +530,256 @@ export default function App() {
     const names = splashText.name.split(' ');
     
     return (
-      <View style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
-        {/* Advanced Calculator Logo */}
-        <View style={{ 
-          width: 100, 
-          height: 100, 
-          backgroundColor: '#3b82f6', 
-          borderRadius: 20,
-          justifyContent: 'flex-start',
-          padding: 12,
-          marginBottom: 30,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 6
-        }}>
-          {/* Display Screen */}
+      <LinearGradient colors={['#1e3a8a', '#3b82f6', '#60a5fa']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        {/* Content */}
+        <View style={{ alignItems: 'center', zIndex: 10 }}>
+          {/* Advanced Calculator Logo */}
           <View style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
-            borderRadius: 8,
-            height: 24,
-            width: '100%',
-            marginBottom: 10,
-            paddingRight: 4,
-            justifyContent: 'flex-end',
-            paddingBottom: 2
+            width: 100, 
+            height: 100, 
+            backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+            borderRadius: 20,
+            justifyContent: 'flex-start',
+            padding: 12,
+            marginBottom: 30,
+            borderWidth: 2,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            shadowColor: '#3b82f6',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.4,
+            shadowRadius: 12,
+            elevation: 10
           }}>
+            {/* Display Screen */}
             <View style={{ 
-              width: '70%', 
-              height: 4, 
-              backgroundColor: 'rgba(255, 255, 255, 0.4)',
-              borderRadius: 2
-            }} />
-          </View>
-          
-          {/* Button Grid - 3x2 */}
-          <View style={{ gap: 6 }}>
-            <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: 8,
+              height: 24,
+              width: '100%',
+              marginBottom: 10,
+              paddingRight: 4,
+              justifyContent: 'flex-end',
+              paddingBottom: 2
+            }}>
+              <View style={{ 
+                width: '70%', 
+                height: 4, 
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                borderRadius: 2
+              }} />
             </View>
             
-            <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
-              <View style={{ width: 18, height: 18, backgroundColor: '#06b6d4', borderRadius: 4 }} />
+            {/* Button Grid - 3x2 */}
+            <View style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+              </View>
+              
+              <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'space-between' }}>
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+                <View style={{ width: 18, height: 18, backgroundColor: 'rgba(255, 255, 255, 0.4)', borderRadius: 4 }} />
+              </View>
             </View>
           </View>
+          
+          <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+            <Text style={{ color: '#ffffff' }}>{names[0]} </Text>
+            <Text style={{ color: '#ffffff' }}>{names.slice(1).join(' ')}</Text>
+          </Text>
+          
+          <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 11, marginBottom: 40, textAlign: 'center', paddingHorizontal: 20 }}>
+            {splashText.desc}
+          </Text>
+          
+          <View style={{ 
+            width: 48, 
+            height: 48, 
+            borderRadius: 24, 
+            borderWidth: 3, 
+            borderColor: 'rgba(255, 255, 255, 0.6)', 
+            borderTopColor: 'rgba(255, 255, 255, 1)',
+            borderRightColor: 'rgba(255, 255, 255, 1)'
+          }} />
         </View>
-        
-        <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', paddingHorizontal: 20 }}>
-          <Text style={{ color: '#475569' }}>{names[0]} </Text>
-          <Text style={{ color: '#3b82f6' }}>{names.slice(1).join(' ')}</Text>
-        </Text>
-        
-        <Text style={{ color: '#64748b', fontSize: 11, marginBottom: 40 }}>
-          {splashText.desc}
-        </Text>
-        
-        <View style={{ 
-          width: 48, 
-          height: 48, 
-          borderRadius: 24, 
-          borderWidth: 3, 
-          borderColor: '#3b82f6', 
-          borderTopColor: '#06b6d4',
-          borderRightColor: '#06b6d4'
-        }} />
-      </View>
+      </LinearGradient>
+    );
+  }
+
+  // Onboarding Screens
+  if (showOnboarding) {
+    const onboardingData = [
+      {
+        tr: { title: 'Hoş Geldiniz', desc: 'Borsa yatırımlarınızı akıllıca yönetin ve hedef ortalama fiyatınıza ulaşın', icon: '📈' },
+        en: { title: 'Welcome', desc: 'Manage your stock investments wisely and reach your target average price', icon: '📈' },
+        de: { title: 'Willkommen', desc: 'Verwalten Sie Ihre Börseninvestitionen klug und erreichen Sie Ihren Zieldurchschnittspreis', icon: '📈' },
+        ru: { title: 'Добро пожаловать', desc: 'Управляйте своими инвестициями мудро и достигните целевой средней цены', icon: '📈' },
+        it: { title: 'Benvenuto', desc: 'Gestisci i tuoi investimenti in borsa in modo saggio e raggiungi il tuo prezzo medio target', icon: '📈' },
+        fr: { title: 'Bienvenue', desc: 'Gérez vos investissements en bourse avec sagesse et atteignez votre prix moyen cible', icon: '📈' },
+        es: { title: 'Bienvenido', desc: 'Gestiona tus inversiones bursátiles de manera inteligente y alcanza tu precio promedio objetivo', icon: '📈' },
+        pt: { title: 'Bem-vindo', desc: 'Gerencie seus investimentos em ações com sabedoria e atinja seu preço médio alvo', icon: '📈' },
+        ja: { title: 'ようこそ', desc: '株式投資を賢く管理し、目標平均価格に到達します', icon: '📈' },
+        zh: { title: '欢迎', desc: '明智地管理您的股票投资并达到目标平均价格', icon: '📈' }
+      },
+      {
+        tr: { title: 'Nasıl Kullanılır', desc: 'Güncel miktarını ve fiyatını gir, hedef fiyatı belirle ve kaç birim satın almanız gerektiğini öğren', icon: '💡' },
+        en: { title: 'How to Use', desc: 'Enter your current quantity and price, set your target price and find out how many units to buy', icon: '💡' },
+        de: { title: 'Verwendungsweise', desc: 'Geben Sie Ihre aktuelle Menge und Ihren Preis ein, legen Sie Ihren Zielpreis fest und erfahren Sie, wie viele Einheiten Sie kaufen müssen', icon: '💡' },
+        ru: { title: 'Как использовать', desc: 'Введите текущее количество и цену, установите целевую цену и узнайте, сколько единиц покупать', icon: '💡' },
+        it: { title: 'Come usare', desc: 'Inserisci la tua quantità e prezzo attuali, imposta il tuo prezzo target e scopri quante unità dovrai acquistare', icon: '💡' },
+        fr: { title: 'Comment utiliser', desc: 'Entrez votre quantité et prix actuels, définissez votre prix cible et découvrez combien d\'unités acheter', icon: '💡' },
+        es: { title: 'Cómo usar', desc: 'Ingresa tu cantidad y precio actual, establece tu precio objetivo y descubre cuántas unidades comprar', icon: '💡' },
+        pt: { title: 'Como usar', desc: 'Digite sua quantidade e preço atuais, defina seu preço alvo e descubra quantas unidades comprar', icon: '💡' },
+        ja: { title: '使い方', desc: '現在の数量と価格を入力し、目標価格を設定して、購入する必要のある単位数を確認してください', icon: '💡' },
+        zh: { title: '如何使用', desc: '输入您当前的数量和价格，设置目标价格并找出您需要购买的单位数', icon: '💡' }
+      },
+      {
+        tr: { title: 'Başlayalım', desc: 'Artık hazirsınız. Uygulamayı kullanmaya başlayın ve yatırımlarınızı optimize edin!', icon: '🚀' },
+        en: { title: 'Get Started', desc: 'You\'re ready now. Start using the app and optimize your investments!', icon: '🚀' },
+        de: { title: 'Loslegen', desc: 'Sie sind bereit. Beginnen Sie mit der App und optimieren Sie Ihre Investitionen!', icon: '🚀' },
+        ru: { title: 'Начнем', desc: 'Вы готовы. Начните использовать приложение и оптимизируйте свои инвестиции!', icon: '🚀' },
+        it: { title: 'Iniziamo', desc: 'Sei pronto. Inizia a utilizzare l\'app e ottimizza i tuoi investimenti!', icon: '🚀' },
+        fr: { title: 'Commençons', desc: 'Vous êtes prêt. Commencez à utiliser l\'application et optimisez vos investissements!', icon: '🚀' },
+        es: { title: 'Empecemos', desc: '¡Estás listo! Comienza a usar la aplicación y optimiza tus inversiones!', icon: '🚀' },
+        pt: { title: 'Vamos começar', desc: 'Você está pronto. Comece a usar o aplicativo e otimize seus investimentos!', icon: '🚀' },
+        ja: { title: '始めましょう', desc: '準備ができました。アプリの使用を開始して、投資を最適化してください!', icon: '🚀' },
+        zh: { title: '开始', desc: '你已准备好。开始使用应用程序并优化您的投资！', icon: '🚀' }
+      }
+    ];
+
+    const currentData = onboardingData[onboardingPage][language] || onboardingData[onboardingPage].en;
+
+    const handleNext = () => {
+      if (onboardingPage < onboardingData.length - 1) {
+        setOnboardingPage(onboardingPage + 1);
+      } else {
+        finishOnboarding();
+      }
+    };
+
+    const finishOnboarding = async () => {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      setShowOnboarding(false);
+      setOnboardingPage(0);
+    };
+
+    return (
+      <LinearGradient colors={['#1e3a8a', '#3b82f6', '#60a5fa']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
+        {/* Background Content Box */}
+        <View style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: 24,
+          padding: 32,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.15)',
+          width: '100%',
+          alignItems: 'center'
+        }}>
+          {/* Icon */}
+          <Text style={{ fontSize: 80, marginBottom: 20 }}>{currentData.icon}</Text>
+
+          {/* Title */}
+          <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ffffff', textAlign: 'center', marginBottom: 12 }}>
+            {currentData.title}
+          </Text>
+
+          {/* Description */}
+          <Text style={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.85)', textAlign: 'center', lineHeight: 24, marginBottom: 40 }}>
+            {currentData.desc}
+          </Text>
+
+          {/* Pagination Dots */}
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 40 }}>
+            {onboardingData.map((_, idx) => (
+              <View 
+                key={idx}
+                style={{ 
+                  width: idx === onboardingPage ? 24 : 8, 
+                  height: 8, 
+                  borderRadius: 4, 
+                  backgroundColor: idx === onboardingPage ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.3)'
+                }} 
+              />
+            ))}
+          </View>
+
+          {/* Buttons */}
+          <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+            {onboardingPage > 0 && (
+              <TouchableOpacity
+                onPress={() => setOnboardingPage(onboardingPage - 1)}
+                style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center'
+                }}
+              >
+                <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 14 }}>← Geri</Text>
+              </TouchableOpacity>
+            )}
+
+            {onboardingPage < onboardingData.length - 1 ? (
+              <>
+                <TouchableOpacity
+                  onPress={finishOnboarding}
+                  style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: '600', fontSize: 14 }}>Atla</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNext}
+                  style={{
+                    flex: 1.5,
+                    backgroundColor: '#ffffff',
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    shadowColor: '#3b82f6',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 8
+                  }}
+                >
+                  <Text style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: 14 }}>İleri →</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                onPress={finishOnboarding}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#ffffff',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  shadowColor: '#3b82f6',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8
+                }}
+              >
+                <Text style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: 14 }}>Başla 🚀</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </LinearGradient>
     );
   }
 
