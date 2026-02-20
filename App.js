@@ -1080,8 +1080,8 @@ export default function App() {
       </View>
     </ScrollView>
 
-    {/* Footer back to bottom with fixed position */}
-    <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 10 }}>
+    {/* Footer back to bottom with fixed position - HIDDEN */}
+    {/* <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 10 }}>
       <View style={{ 
         borderTopWidth: 1, 
         borderTopColor: borderColor, 
@@ -1093,7 +1093,7 @@ export default function App() {
           {t.footerText || `${t.navTitle} • v1.0.2025`}
         </Text>
       </View>
-    </View>
+    </View> */}
     </KeyboardAvoidingView>
 
     {/* Legal Content Modal */}
