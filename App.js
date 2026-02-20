@@ -911,7 +911,7 @@ export default function App() {
       <ScrollView 
         ref={scrollRef}
         style={{ flex: 1, backgroundColor: bgColor }} 
-        contentContainerStyle={{ paddingBottom: 140 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === 'android' ? (result ? 120 : 60) : 100 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl 
@@ -1270,22 +1270,25 @@ export default function App() {
         </View>
       </View>
     </ScrollView>
-
-    {/* Footer back to bottom with fixed position - HIDDEN */}
-    {/* <View style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 10 }}>
-      <View style={{ 
-        borderTopWidth: 1, 
-        borderTopColor: borderColor, 
-        paddingTop: 12, 
-        paddingBottom: 10,
-        alignItems: 'center'
-      }}>
-        <Text style={{ fontSize: 11, color: secondaryText, textAlign: 'center' }}>
-          {t.footerText || `${t.navTitle} • v1.0.2025`}
-        </Text>
-      </View>
-    </View> */}
     </KeyboardAvoidingView>
+
+    {/* Fluid Minimal Footer Bar - Fixed Position */}
+    <View style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 48,
+      backgroundColor: bgColor,
+      borderTopWidth: 0.5,
+      borderTopColor: borderColor,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingBottom: Platform.OS === 'android' ? 48 : 16,
+      zIndex: 100
+    }}>
+      {/* Empty footer - text hidden */}
+    </View>
 
     {/* Legal Content Modal */}
     <Modal
