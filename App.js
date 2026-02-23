@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, TextInput, TouchableOpacity, Text as RNText, useColorScheme, Switch, Modal, FlatList, KeyboardAvoidingView, Platform, RefreshControl, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
+import * as SplashScreen from 'expo-splash-screen';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// Prevent native splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Custom Text component with font scaling disabled
 const Text = (props) => <RNText allowFontScaling={false} {...props} />;
@@ -407,6 +411,9 @@ export default function App() {
       const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
       
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Hide native splash screen
+      await SplashScreen.hideAsync();
       setShowSplash(false);
       
       if (!hasSeenOnboarding) {
