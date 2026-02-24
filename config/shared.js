@@ -18,13 +18,6 @@ export const sharedConfig = {
   icon: './assets/icon.png',
   favicon: './assets/favicon.png',
   
-  // Splash Screen (shared settings)
-  splash: {
-    image: './assets/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#0f172a'
-  },
-  
   // Build & Deployment
   projectId: 'bcdaedd4-3bfa-4f35-ac73-589ef549d8fb',
 };

@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Prevent native splash screen from auto-hiding
+// Keep native splash visible until we explicitly hide it
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Custom Text component with font scaling disabled
@@ -412,8 +412,13 @@ export default function App() {
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Hide native splash screen
-      await SplashScreen.hideAsync();
+      // Hide native splash screen and show custom splash
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.log('SplashScreen hide error:', e);
+      }
+      
       setShowSplash(false);
       
       if (!hasSeenOnboarding) {
@@ -907,9 +912,14 @@ export default function App() {
               alignItems: 'center'
             }}
           >
-            <Text style={{ color: textColor, fontWeight: '600', fontSize: 12 }}>
-              💱 {currency}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ color: '#3b82f6', fontWeight: '700', fontSize: 14 }}>
+                {currencySymbols[currency]}
+              </Text>
+              <Text style={{ color: textColor, fontWeight: '500', fontSize: 12, marginLeft: 6 }}>
+                {currency}
+              </Text>
+            </View>
             <Text style={{ color: secondaryText }}>▼</Text>
           </TouchableOpacity>
         </View>
@@ -1030,13 +1040,23 @@ export default function App() {
                     backgroundColor: currency === curr ? '#3b82f6' : 'transparent'
                   }}
                 >
-                  <Text style={{
-                    color: currency === curr ? 'white' : textColor,
-                    fontWeight: currency === curr ? 'bold' : '500',
-                    fontSize: 13
-                  }}>
-                    {currencySymbols[curr]} {curr}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{
+                      color: currency === curr ? 'white' : '#3b82f6',
+                      fontWeight: '700',
+                      fontSize: 14
+                    }}>
+                      {currencySymbols[curr]}
+                    </Text>
+                    <Text style={{
+                      color: currency === curr ? 'white' : textColor,
+                      fontWeight: currency === curr ? 'bold' : '500',
+                      fontSize: 13,
+                      marginLeft: 6
+                    }}>
+                      {curr}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               )}
             />
