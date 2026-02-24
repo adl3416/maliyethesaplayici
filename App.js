@@ -410,15 +410,14 @@ export default function App() {
       // Onboarding gösterilmiş mi kontrol et
       const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Hide native splash screen and show custom splash
+      // Hide native splash immediately and show custom splash
       try {
         await SplashScreen.hideAsync();
       } catch (e) {
         console.log('SplashScreen hide error:', e);
       }
       
+      await new Promise(resolve => setTimeout(resolve, 800));
       setShowSplash(false);
       
       if (!hasSeenOnboarding) {
