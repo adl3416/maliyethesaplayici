@@ -22,12 +22,12 @@ const translations = {
     ],
     heroDesc: "Hedef ortalama fiyata ulaşmak için kaç birim satın almanız gerektiğini saniyeler içinde doğru hesaplayın.",
     calcTitle: "Hesaplayıcı",
-    labelCurrentQty: "Güncel Miktar",
-    labelCurrentPrice: "Güncel Ort. Fiyatı",
-    labelNewPrice: "Yeni Fiyat",
-    labelTargetPrice: "Hedef Ort. Fiyatı",
-    resultTitle: "Satın Alınacak Miktar",
-    totalCost: "Tahmini Maliyet",
+    labelCurrentQty: "GÜNCEL MİKTAR",
+    labelCurrentPrice: "GÜNCEL ORT. FİYATI",
+    labelNewPrice: "YENİ FİYAT",
+    labelTargetPrice: "HEDEF ORT. FİYATI",
+    resultTitle: "SATIN ALINACAK MİKTAR",
+    totalCost: "TAHMİNİ MALİYET",
     newTotalQty: "Yeni Toplam:",
     errorRange: "Hedef fiyat, güncel fiyat ile yeni fiyat arasında olmalıdır.",
     errorEqual: "Hedef fiyat yeni fiyata eşit olamaz.",
@@ -329,6 +329,13 @@ export default function App() {
   
   useEffect(() => {
     const initializeApp = async () => {
+      // Hide native splash immediately
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.log('Initial SplashScreen hide error:', e);
+      }
+      
       await loadSettings();
     };
     initializeApp();
@@ -927,8 +934,9 @@ export default function App() {
       <ScrollView 
         ref={scrollRef}
         style={{ flex: 1, backgroundColor: bgColor }} 
-        contentContainerStyle={{ paddingBottom: Platform.OS === 'android' ? (result ? 120 : 60) : 100 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Platform.OS === 'android' ? (result ? 120 : 60) : 100 }}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={Platform.OS === 'ios' || !result}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
@@ -1105,14 +1113,15 @@ export default function App() {
       </View>
 
       {/* Calculator Card */}
-      <View style={{ marginHorizontal: 16, marginTop: 22, marginBottom: 24 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 22, marginBottom: 24, flex: 1 }}>
         <View style={{ 
           backgroundColor: cardBg, 
           borderRadius: 20, 
           padding: 20,
           paddingBottom: 27,
           borderWidth: 1,
-          borderColor: borderColor
+          borderColor: borderColor,
+          flex: 1
         }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>
@@ -1122,13 +1131,13 @@ export default function App() {
           </View>
 
           {/* Input Grid */}
-          <View style={{ gap: 20 }}>
+          <View style={{ gap: 20, flex: 1, justifyContent: 'space-around' }}>
             {/* Row 1 */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text 
                   numberOfLines={1} 
-                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6 }}
                 >
                   {t.labelCurrentQty}
                 </Text>
@@ -1153,7 +1162,7 @@ export default function App() {
               <View style={{ flex: 1 }}>
                 <Text 
                   numberOfLines={1} 
-                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6 }}
                 >
                   {t.labelCurrentPrice}
                 </Text>
@@ -1182,7 +1191,7 @@ export default function App() {
               <View style={{ flex: 1 }}>
                 <Text 
                   numberOfLines={1} 
-                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6, textTransform: 'uppercase' }}
+                  style={{ fontSize: 10, fontWeight: '600', color: secondaryText, marginBottom: 6 }}
                 >
                   {t.labelNewPrice}
                 </Text>
@@ -1207,7 +1216,7 @@ export default function App() {
               <View style={{ flex: 1 }}>
                 <Text 
                   numberOfLines={1} 
-                  style={{ fontSize: 10, fontWeight: 'bold', color: '#3b82f6', marginBottom: 6, textTransform: 'uppercase' }}
+                  style={{ fontSize: 10, fontWeight: 'bold', color: '#3b82f6', marginBottom: 6 }}
                 >
                   {t.labelTargetPrice}
                 </Text>
@@ -1252,7 +1261,7 @@ export default function App() {
               <View style={{ padding: 16 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
                   <View style={{ flex: 1.2 }}>
-                    <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: 'bold', color: '#bfdbfe', textTransform: 'uppercase' }}>
+                    <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: 'bold', color: '#bfdbfe' }}>
                       {t.resultTitle}
                     </Text>
                     <Text numberOfLines={1} style={{ fontSize: 28, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
@@ -1260,7 +1269,7 @@ export default function App() {
                     </Text>
                   </View>
                   <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                    <Text numberOfLines={1} style={{ fontSize: 10, color: '#bfdbfe', textTransform: 'uppercase' }}>
+                    <Text numberOfLines={1} style={{ fontSize: 10, color: '#bfdbfe' }}>
                       {t.totalCost}
                     </Text>
                     <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: 'bold', color: 'white', marginTop: 4, fontFamily: 'monospace' }}>

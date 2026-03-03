@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Maliyet Hesaplayıcı",
-    "slug": "maliyet-hesaplayici",
+    "slug": "MaviProje",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -13,7 +13,10 @@
     },
     "android": {
       "package": "com.kostantinnapoli11.maviproje",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "splash": {
+        "image": "./assets/blank.png"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
