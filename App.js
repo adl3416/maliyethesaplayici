@@ -470,7 +470,7 @@ export default function App() {
   const scrollToInputs = () => {
     setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({ y: 195, animated: true });
+        scrollRef.current.scrollTo({ y: 130, animated: true });
       }
     }, 50);
   };
@@ -1113,15 +1113,14 @@ export default function App() {
       </View>
 
       {/* Calculator Card */}
-      <View style={{ marginHorizontal: 16, marginTop: 22, marginBottom: 24, flex: 1 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 22, marginBottom: 24 }}>
         <View style={{ 
           backgroundColor: cardBg, 
           borderRadius: 20, 
           padding: 20,
-          paddingBottom: 27,
+          paddingBottom: 30,
           borderWidth: 1,
           borderColor: borderColor,
-          flex: 1
         }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>
@@ -1131,7 +1130,7 @@ export default function App() {
           </View>
 
           {/* Input Grid */}
-          <View style={{ gap: 20, flex: 1, justifyContent: 'space-around' }}>
+          <View style={{ gap: 30 }}>
             {/* Row 1 */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
